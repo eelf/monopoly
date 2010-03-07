@@ -13,8 +13,7 @@ setcookie('key', $key);
 $playerid = isset($_SESSION['playerid']) ? $_SESSION['playerid'] : 0;
 setcookie('playerid', $playerid);
 
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
 <title>Game</title>

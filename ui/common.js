@@ -1,5 +1,7 @@
 var ui = 'ui/';
+var dev = true;
 
+/* работа с цветом */
 function dec2rgb(d) {
     var red = (d & 0xff0000) >> 16;
     var green = (d & 0x00ff00) >> 8;
@@ -18,6 +20,7 @@ function color2rgb(color) {
     return dec2rgb(hex2dec(color.substring(1)));
 }
 
+/* шестнадцатиричные строки */
 function dec2hex(d) {
     var r = '';
     while(d > 0) {
@@ -36,6 +39,9 @@ function hex2dec(s) {
     return r;
 }
 
+/* кукисы
+todo: removeCookie
+*/
 function getCookie(n) {
 	var c = " " + document.cookie;
 	var s = " " + n + "=";
@@ -54,27 +60,55 @@ function getCookie(n) {
 	}
 	return(r);
 }
+
+
+/* укороченый вызов getElementById, такой же есть в жквери */
 function b(id) {
     return document.getElementById(id);
 }
+
+
+/* в див с айдишником лог добавляет строку или объект со всеми его свойствами 
+   делит содержимое дива на строки \н и оставляет 30 с конца
+*/
 function log(str) {
     if (typeof(str) == 'object') {
         var o = '';
         for(var i in str) o += i + ':' + str[i];
         str = o;
     }
-    b('log').innerHTML = b('log').innerHTML + str + '<br>';
+    b('log').innerHTML = b('log').innerHTML + str + "<br>\n";
+    lines = b('log').innerHTML.split("\n");
+    b('log').innerHTML = lines.slice(-30).join("\n");
 }
+
+
+// Convert all applicable characters to HTML entities
+function htmlentities(s){
+    var div = document.createElement('div');
+    var text = document.createTextNode(s);
+    div.appendChild(text);
+    return div.innerHTML;
+}
+
+
+/* делает синхронный (типа браузер подвисает пока запрос не завершится)
+   хттп запрос, сервер - файл скрипта обработки запроса гейм.пхп подефлоту */
 function req(r, server) {
     if (server == undefined) server = 'game.php?';
+    if (dev) log('req(' + server + r + ')');
     x.open('GET', server + r, false);
     x.send(null);
     if (x.status != 200) {
         connectionProblem = true;
         return '';
     }
+    if (dev) log('response=' + htmlentities(x.responseText)+'=end');
     return x.responseText;
 }
+
+
+/* крутилка показывающая что яваскрипт работает */
 function pro() {
     var s = '-\\|/';
     b('pro').innerHTML = s.charAt((s.indexOf(b('pro').innerHTML) + 1) % s.length);

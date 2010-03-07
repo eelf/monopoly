@@ -1,61 +1,48 @@
 <?php
 
 class Games {
-    private $games;
+    /* Singleton pattern 
+    http://ru.wikipedia.org/wiki/Одиночка_(шаблон_проектирования)
+    */
     static $instance = null;
+    static function getInstance() {
+    	if (self::$instance == null) self::$instance = new self();
+        return self::$instance;
+    }
+
     function __construct() {
-        self::$instance = $this;
-        $this->games = DB::getInstance()->getRows('games');
-        if ($this->games[0] == '') $this->games = array();
     }
+    /*
+    depricated, использовать метод с постраничной разбивкой
+    */
     function getAllGames() {
-/*
-        $r = '';
-        foreach($this->games as $game) {
-            list($gamecreator, $gamename, $gamemaxplayers, $gameplayers) = explode(':', $game);
-            $r .= "\n" . $g
-        }
-*/
-        return implode("\n", $this->games);
+	$games = DB::getInstance()->getRows("SELECT * FROM games");
+	// массив игр получен, далее его надо както передать клиенту...
+	// сериализуем объект: делаем из массива массивов строку: разделители "\н" и ":"
+	$sendToClient = '';
+	foreach($games as $game) $sendToClient .= "{$game['creator']}:{$game['name']}\n";
+        return $sendToClient;
     }
-    function getGames($creator = '', $name = '', $maxplayers = 0, $players = array()) {
-        $result = array();
-        foreach($this->games as $game) {
-            list($gamecreator, $gamename, $gamemaxplayers, $gameplayers) = explode(':', $game);
-            $found = false;
-            foreach(explode(";", $gameplayers) as $gameplayer)
-                if (in_array($gameplayer, $players)) {
-                    $found = true;
-                    break;
-                }
-            if ($creator == $gamecreator ||
-                $name == $gamename ||
-                $maxplayers == $gamemaxplayers ||
-                $found
-                ) $result []= $game;
-        }
-        return $result;
+
+    /*
+    returns array_assoc (creator, name, maxplayers, players)
+    see sql/monopoly.txt
+    */
+    function getGameByCreator($creator) {
+        $game = DB::getInstance()->getRow("SELECT * FROM games WHERE creator = $creator");
+        return $game;
     }
-    function getGame($creator = '', $name = '', $maxplayers = 0, $players = array()) {
-        $games = $this->getGames($creator, $name, $maxplayers, $players);
-        if (count($games)) return $games[0];
-        return '';
+    function getGameByName($name) {
+        $game = DB::getInstance()->getRow("SELECT * FROM games WHERE name = '$name'");
+        return $game;
     }
     function newGame($player, $name, $maxplayers) {
         if (!preg_match('/^[A-Za-z0-9_]{4,15}$/', $name)) throw new Exception('Wrong game name');
-        if ($this->getGame('', $name)) throw new Exception('Game already exists');
-        if ($this->getGame($player)) throw new Exception('Already created game');
+        if ($this->getGameByName($name)) throw new Exception('Game already exists');
+        if ($this->getGameByCreator($player)) throw new Exception('Already created game');
         $maxplayers = (int)$maxplayers;
         if ($maxplayers < 2 || $maxplayers > 4) throw new Exception('Wrong max players count');
-        $this->games []= "$player:$name:$maxplayers";
-        DB::getInstance()->putRows('games', $this->games);
-    }
-    function getPlayerGame($player) {
-        $game = Games::getInstance()->getGame($player);
-        return $game;
-    }
-    function getInstance() {
-        return (self::$instance == null) ? new Games() : self::$instance;
+        DB::getInstance()->query("INSERT INTO games (creator, name, maxplayers, players) VALUES ($player, '$name', $maxplayer, '')");
     }
     function joinGame() {
     }

@@ -2,10 +2,17 @@
 
 define('SYS', 'sys/');
 
+include SYS . 'functions.php';
+include SYS . 'config.php';
 include SYS . 'db.php';
 include SYS . 'games.php';
 include SYS . 'players.php';
 session_start();
+//mb_internal_encoding("UTF-8");
+//date_default_timezone_set('Europe/Moscow');
+
+$old_error_handler = set_error_handler("myErrorHandler");
+
 //$player = session_id() . str_pad(dechex(ip2long($_SERVER['REMOTE_ADDR'])), 8, '0', false);
 if (!isset($_GET['a'])) die('Nothing');
 
@@ -47,7 +54,7 @@ case 'newgame':
     echo "OK";
     break;
 case 'mygame':
-    $game = Games::getInstance()->getPlayerGame($_SESSION['playerid']);
+    $game = Games::getInstance()->getGameByCreator($_SESSION['playerid']);
     echo $game ? $game : 'No Game';
     break;
 case 'joingame':
