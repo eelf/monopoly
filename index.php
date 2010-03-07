@@ -13,7 +13,8 @@ setcookie('key', $key);
 $playerid = isset($_SESSION['playerid']) ? $_SESSION['playerid'] : 0;
 setcookie('playerid', $playerid);
 
-?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
 <title>Game</title>
@@ -22,6 +23,8 @@ setcookie('playerid', $playerid);
 <script type="text/javascript" src="ui/common.js"></script>
 <script type="text/javascript" src="ui/login.js"></script>
 <script type="text/javascript" src="ui/games.js"></script>
+<script type="text/javascript" src="js/jquery-1.3.2.min.js.js"></script>
+<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
 </head>
 <body>
     <div id="pro"></div>

@@ -29,6 +29,11 @@ case 'login':
     $_SESSION['playerid'] = $playerid;
     echo "OK";
     break;
+case 'logout':
+    //unset($_SESSION['playerid']);
+    session_destroy();
+    echo "OK";
+    break;
 case 'listgames':
     $games = Games::getInstance()->getAllGames();
     echo $games ? $games : 'No Games';

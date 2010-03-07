@@ -1,3 +1,24 @@
+html{
+	margin: 0;
+	padding: 0;
+}
+body{
+	margin: 0;
+	padding: 0;
+}
 #pro {
 	font-size: 72pt;
+	padding: 20px;
+	display: none;
+}
+#x {
+	font-family: Helvetica, Verdana, Arial;
+	text-align: right;
+	width: 250px;
+	padding: 15px;
+	padding-right: 20px;
+  background-color: #CCAAFF;		/* if needed */
+  border: 2px solid #9988CC;   /* if needed */
+ 	-webkit-border-radius: 15px;	/* for Safari & Chrome */
+  -moz-border-radius: 15px;			/* for Firefox */
 }

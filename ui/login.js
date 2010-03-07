@@ -14,6 +14,14 @@ log('key'+key);
         refresh();
     }
 }
+function logout() {
+		var t = req('a=logout');
+    if (t != 'OK') alert(t);
+    else {
+        b('x').innerHTML = req('', ui + 'login.html');
+        refresh();
+    }	
+}
 function checklogin() {
     playerid = getCookie('playerid');
     if (playerid == 0) b('x').innerHTML = req('', ui + 'login.html');
