@@ -2,7 +2,7 @@
 
 class Games {
     /* Singleton pattern 
-    http://ru.wikipedia.org/wiki/Одиночка_(шаблон_проектирования)
+    http://ru.wikipedia.org/wiki/РћРґРёРЅРѕС‡РєР°_(С€Р°Р±Р»РѕРЅ_РїСЂРѕРµРєС‚РёСЂРѕРІР°РЅРёСЏ)
     */
     static $instance = null;
     static function getInstance() {
@@ -13,12 +13,12 @@ class Games {
     function __construct() {
     }
     /*
-    depricated, использовать метод с постраничной разбивкой
+    depricated, РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РјРµС‚РѕРґ СЃ РїРѕСЃС‚СЂР°РЅРёС‡РЅРѕР№ СЂР°Р·Р±РёРІРєРѕР№
     */
     function getAllGames() {
 	$games = DB::getInstance()->getRows("SELECT * FROM games");
-	// массив игр получен, далее его надо както передать клиенту...
-	// сериализуем объект: делаем из массива массивов строку: разделители "\н" и ":"
+	// РјР°СЃСЃРёРІ РёРіСЂ РїРѕР»СѓС‡РµРЅ, РґР°Р»РµРµ РµРіРѕ РЅР°РґРѕ РєР°РєС‚Рѕ РїРµСЂРµРґР°С‚СЊ РєР»РёРµРЅС‚Сѓ...
+	// СЃРµСЂРёР°Р»РёР·СѓРµРј РѕР±СЉРµРєС‚: РґРµР»Р°РµРј РёР· РјР°СЃСЃРёРІР° РјР°СЃСЃРёРІРѕРІ СЃС‚СЂРѕРєСѓ: СЂР°Р·РґРµР»РёС‚РµР»Рё "\РЅ" Рё ":"
 	$sendToClient = '';
 	foreach($games as $game) $sendToClient .= "{$game['creator']}:{$game['name']}\n";
         return $sendToClient;

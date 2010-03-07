@@ -2,7 +2,7 @@
 
 class Players {
     /* Singleton pattern 
-    http://ru.wikipedia.org/wiki/Одиночка_(шаблон_проектирования)
+    http://ru.wikipedia.org/wiki/РћРґРёРЅРѕС‡РєР°_(С€Р°Р±Р»РѕРЅ_РїСЂРѕРµРєС‚РёСЂРѕРІР°РЅРёСЏ)
     */
     static $instance = null;
     static function getInstance() {
