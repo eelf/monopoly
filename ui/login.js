@@ -15,7 +15,7 @@ log('key'+key);
     }
 }
 function logout() {
-		var t = req('a=logout');
+	var t = req('a=logout');
     if (t != 'OK') alert(t);
     else {
         b('x').innerHTML = req('', ui + 'login.html');

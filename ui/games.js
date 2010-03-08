@@ -3,40 +3,39 @@ var x = false;
 var connectionProblem = false;
 var gameListTemplate = '';
 function refresh() {
-    c = color2rgb(b('pro').style.color ? b('pro').style.color : '#00ff00');
-    switch (c.g) { case 0xff: c.g = 0x88; break; case 0x88: c.g = 0x44; break; case 0x44: c.g = 0xff; }
-    b('pro').style.color = rgb2color(c);
-    if (!getMyGame()) listGames();
+	var c = color2rgb($('#proi').css('background-color'));
+	c.g = {0xff:0xaa, 0xaa:0x66, 0x66:0x99, 0x99:0xdd, 0xdd:0xff}[c.g];
+	$('#proi').css('background-color', rgb2color(c));
+
+	$.getJSON('game.php', {a: 'games'}, function gamesC(games) {
+		if (games['mygame']) {
+			// скрыть форму новой игры
+			$('#newgame').html('');
+			// показать инфо про созданную игру и кнопки закрытия игры
+			$('#gamelist').html(games['mygame']['creator'] + games['mygame']['name'] + 
+				games['mygame']['maxplayers'] + games['mygame']['players']);
+		
+		} else if (games['games'].length) {
+			if (gameListTemplate == '') gameListTemplate = req('', 'ui/gamelist.html');
+			o = '';
+			for(var i in games['games']) {
+				tmp = gameListTemplate;
+				tmp = tmp.replace('{GAME}', games['games'][i][1]).replace('{CREATOR}', games['games'][i][0]);
+				o += tmp;
+			}
+			b('gamelist').innerHTML = o;
+		} else {
+			b('gamelist').innerHTML = 'No Games';
+		}
+	});
     if (dorefresh)
         setTimeout('refresh();', 10000);
 }
-function listGames() {
-    t = req('a=listgames');
-    if (t == 'No Games') {
-        b('gamelist').innerHTML = 'No Games';
-    } else {
-        if (gameListTemplate == '') gameListTemplate = req('', 'ui/gamelist.html');
-        tt = t.split("\n");
-        o = '';
-        for(var i in tt) {
-            game = tt[i].split(':');
-            tmp = gameListTemplate;
-            tmp = tmp.replace('{GAME}', game[1]).replace('{CREATOR}', game[0]);
-            o += tmp;
-        }
-        b('gamelist').innerHTML = o;
-    }
-}
-function getMyGame() {
-    t = req('a=mygame');
-    if (t == 'No Game') return false;
-    b('newgame').innerHTML = '';
-    tt = t.split(':');
-    o = 'mygame:';
-    for(var i in tt) o += ' ' + tt[i];
-    b('gamelist').innerHTML = o;
-    return true;
-}
+
+$('#log').ajaxStart(function() {
+	alert('!!');
+});
+
 function newgame() {
     var name = b('gamename').value;
     var maxplayers = b('maxplayers').value;

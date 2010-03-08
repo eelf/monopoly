@@ -41,6 +41,12 @@ case 'logout':
     session_destroy();
     echo "OK";
     break;
+	
+case 'games':
+    $game = Games::getInstance()->getGameByCreator($_SESSION['playerid']);
+	$games = Games::getInstance()->getAllGames();
+	echo json_encode(array('mygame'=>$game, 'games'=>$games));
+	break;
 case 'listgames':
     $games = Games::getInstance()->getAllGames();
     echo $games ? $games : 'No Games';

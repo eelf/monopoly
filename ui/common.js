@@ -108,15 +108,30 @@ function req(r, server) {
 }
 
 
-/* крутилка показывающая что яваскрипт работает */
+/* ползучка показывающая что яваскрипт работает */
 function pro() {
-    var s = '-\\|/';
-    b('pro').innerHTML = s.charAt((s.indexOf(b('pro').innerHTML) + 1) % s.length);
-    setTimeout('pro();', 500);
+    //var s = '-\\|/';
+    //b('pro').innerHTML = s.charAt((s.indexOf(b('pro').innerHTML) + 1) % s.length);
+
+	var left = parseInt($('#proi').css('left'));
+	var width = parseInt($('#proi').css('width'));
+	width += 2;
+	if (width > 100) {
+		witdh = 100;
+		left += 2;
+		if (left > 100) { 
+			left = 0; 
+			width = 0; 
+		}
+	}
+	$('#proi').css('left', left + 'px');
+	$('#proi').css('width', width + 'px');
+    setTimeout('pro();', 200);
 }
 
-window.onload = function() {
+
+$(function() {
     x = new XMLHttpRequest();
     pro();
     checklogin();
-}
+});

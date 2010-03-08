@@ -16,12 +16,10 @@ class Games {
     depricated, использовать метод с постраничной разбивкой
     */
     function getAllGames() {
-	$games = DB::getInstance()->getRows("SELECT * FROM games");
-	// массив игр получен, далее его надо както передать клиенту...
-	// сериализуем объект: делаем из массива массивов строку: разделители "\н" и ":"
-	$sendToClient = '';
-	foreach($games as $game) $sendToClient .= "{$game['creator']}:{$game['name']}\n";
-        return $sendToClient;
+		$games = DB::getInstance()->getRows("SELECT * FROM games");
+//		$sendToClient = '';
+//		foreach($games as $game) $sendToClient .= "{$game['creator']}:{$game['name']}\n";
+        return $games;
     }
 
     /*
@@ -42,7 +40,7 @@ class Games {
         if ($this->getGameByCreator($player)) throw new Exception('Already created game');
         $maxplayers = (int)$maxplayers;
         if ($maxplayers < 2 || $maxplayers > 4) throw new Exception('Wrong max players count');
-        DB::getInstance()->query("INSERT INTO games (creator, name, maxplayers, players) VALUES ($player, '$name', $maxplayer, '')");
+        DB::getInstance()->query("INSERT INTO games (creator, name, maxplayers, players) VALUES ($player, '$name', $maxplayers, '')");
     }
     function joinGame() {
     }
