@@ -14,8 +14,34 @@ session_start();
 $old_error_handler = set_error_handler("myErrorHandler");
 
 //$player = session_id() . str_pad(dechex(ip2long($_SERVER['REMOTE_ADDR'])), 8, '0', false);
-if (!isset($_GET['a'])) die('Nothing');
 
+/***работаем с ajax***/
+//проверяем, что нам поступил именно ajax запрос
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])){
+if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+//получаем параметры и раскодируем их
+	$params = stripslashes($_POST['data']); // обязательно избегаем слешей...
+	$p = json_decode($params); // use $p->needparam
+//формируем ответ
+	switch($p->arg) {
+		case 'login':
+    	try {
+    		$playerid = Players::getInstance()->login($p->email, $p->password, $_SESSION['key']);
+    	} catch (Exception $e) {
+    		die($e->getMessage());
+    	}
+    	$_SESSION['playerid'] = $playerid;
+    	$result['playerid'] = $playerid; //теперь можно передать информацию в страничку
+    	$result['text'] = 'success'; // собственно ради этого и делалось
+    	// удобство в том, что эти данные можно пихать в любые места, т.к. со стороны js у нас появилась свобода
+			break;
+	}
+//кодируем в json и отправляем назад
+	echo json_encode($result);
+}}else{
+
+//иначе упс... работаем по старой схеме
+if (!isset($_GET['a'])) die('Nothing');
 
 switch($_GET['a']) {
 case 'register':
@@ -66,4 +92,8 @@ case 'mygame':
 case 'joingame':
     
     break;
-}
+}//end switch
+}//end else
+
+
+
