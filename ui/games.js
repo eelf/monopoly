@@ -10,13 +10,13 @@ function refresh() {
 	$.getJSON('game.php', {a: 'games'}, function gamesC(games) {
 		if (games['mygame']) {
 			// скрыть форму новой игры
-			$('#newgame').html('');
+			//$('#newgame').html('');
 			// показать инфо про созданную игру и кнопки закрытия игры
-			$('#gamelist').html(games['mygame']['creator'] + games['mygame']['name'] + 
-				games['mygame']['maxplayers'] + games['mygame']['players']);
-		
+			//$('#gamelist').html(games['mygame']['creator'] + games['mygame']['name'] + 
+			//	games['mygame']['maxplayers'] + games['mygame']['players']);
+
 		} else if (games['games'].length) {
-			if (gameListTemplate == '') gameListTemplate = req('', 'ui/gamelist.html');
+			if (gameListTemplate == '') gameListTemplate = req('', 'ui/html/gamelist.html');
 			o = '';
 			for(var i in games['games']) {
 				tmp = gameListTemplate;

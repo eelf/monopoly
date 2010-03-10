@@ -1,4 +1,4 @@
-var ui = 'ui/';
+var ui = 'ui/html/';
 var dev = true;
 
 /* работа с цветом */
