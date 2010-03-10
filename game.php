@@ -15,8 +15,13 @@ $old_error_handler = set_error_handler("myErrorHandler");
 
 //$player = session_id() . str_pad(dechex(ip2long($_SERVER['REMOTE_ADDR'])), 8, '0', false);
 
+
+/* !!!весь game.php и предназначен для обсулживания ajax запросов!!!
+	и толку проверять аякс это или нет нету т.к. кому нада подделает заголовок
+	а нам легче отлаживать делает запрос из браузера */
 /***работаем с ajax***/
 //проверяем, что нам поступил именно ajax запрос
+/*
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])){
 if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
 //получаем параметры и раскодируем их
@@ -39,8 +44,17 @@ if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
 //кодируем в json и отправляем назад
 	echo json_encode($result);
 }}else{
+*/
 
 //иначе упс... работаем по старой схеме
+/* собственно разницы никакой нет: 1) взять из массива гет нужную переменную и смотреть 
+её что за функцию исполнить
+2) взять из массива пост нужную переменную, раскодировать её жсоном, в получившемся объекте 
+опять взять нужную переменную и посмотреть какую функцию исполнить
+
+кодирование жс объекта и передача его через гет запрос происходит автоматически
+а вот пхп объект нужно закодировать синтаксисом жс
+*/
 if (!isset($_GET['a'])) die('Nothing');
 
 switch($_GET['a']) {
@@ -54,13 +68,15 @@ case 'register':
     echo "OK";
     break;
 case 'login':
+	$login = array('auth'=>'OK');
     try {
     $playerid = Players::getInstance()->login($_GET['email'], $_GET['password'], $_SESSION['key']);
-    } catch (Exception $e) {
-    die($e->getMessage());
-    }
+	$login['playerid'] = $playerid;
     $_SESSION['playerid'] = $playerid;
-    echo "OK";
+    } catch (Exception $e) {
+	$login['auth'] = $e->getMessage();
+    }
+	echo json_encode($login);
     break;
 case 'logout':
     //unset($_SESSION['playerid']);
@@ -93,7 +109,7 @@ case 'joingame':
     
     break;
 }//end switch
-}//end else
+//}//end else
 
 
 

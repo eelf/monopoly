@@ -23,18 +23,20 @@ function refresh() {
 				tmp = tmp.replace('{GAME}', games['games'][i][1]).replace('{CREATOR}', games['games'][i][0]);
 				o += tmp;
 			}
-			b('gamelist').innerHTML = o;
+			$('#gamelist').html(o);
 		} else {
-			b('gamelist').innerHTML = 'No Games';
+			$('#gamelist').text('No Games');
 		}
 	});
     if (dorefresh)
         setTimeout('refresh();', 10000);
 }
 
+/* тут тестил вызов события старта аякса но оно чтото не пашет :(
 $('#log').ajaxStart(function() {
 	alert('!!');
 });
+*/
 
 function newgame() {
     var name = b('gamename').value;

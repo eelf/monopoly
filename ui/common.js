@@ -77,9 +77,13 @@ function log(str) {
         for(var i in str) o += i + ':' + str[i];
         str = o;
     }
+	$('#log').append('<div>' + str + '</div>');
+	$('#log').html($('#log > div').slice(-25));
+	/*
     b('log').innerHTML = b('log').innerHTML + str + "<br>\n";
     lines = b('log').innerHTML.split("\n");
     b('log').innerHTML = lines.slice(-30).join("\n");
+	*/
 }
 
 
@@ -129,9 +133,10 @@ function pro() {
     setTimeout('pro();', 200);
 }
 
-
+/*
+	функция всех функций в общем файле жс
+*/
 $(function() {
-    x = new XMLHttpRequest();
     pro();
     checklogin();
 });

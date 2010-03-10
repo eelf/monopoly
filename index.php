@@ -18,8 +18,8 @@ setcookie('playerid', $playerid);
 <head>
 <title>Game</title>
 <link rel="stylesheet" href="ui/style.css" type="text/css"/>
-<script type="text/javascript" src="js/jquery-1.3.2.min.js"></script>
-<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<!--script type="text/javascript" src="js/jquery.json-2.2.min.js"></script-->
 <script type="text/javascript" src="ui/algo.js"></script>
 <script type="text/javascript" src="ui/common.js"></script>
 <script type="text/javascript" src="ui/login.js"></script>
@@ -29,6 +29,5 @@ setcookie('playerid', $playerid);
     <div id="pro"><div id="proi">&nbsp;</div></div>
     <div id="x"></div>
     <div id="log"></div>
-    <button id="login_j">login_j</button>
 </body>
 </html>
