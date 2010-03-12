@@ -5,7 +5,7 @@ var gameListTemplate = '';
 function refresh() {
 	var c = color2rgb($('#proi').css('background-color'));
 	c.g = {0xff:0xaa, 0xaa:0x66, 0x66:0x99, 0x99:0xdd, 0xdd:0xff}[c.g];
-	$('#proi').css('background-color', rgb2color(c));
+	//$('#proi').css('background-color', rgb2color(c));   вызывает ошибку
 
 	$.getJSON('game.php', {a: 'games'}, function gamesC(games) {
 		if (games['mygame']) {

@@ -11,8 +11,6 @@ function login() {
 		if (loginO['auth'] != 'OK') alert(loginO['auth']);
 		else {
 			$.get(ui + 'games.html', function(html) { $('#x').html(html); });
-			$('#x').append($('login'));
-			$('#login').html(loginO.loginame);
 			refresh();
 		}
 	});

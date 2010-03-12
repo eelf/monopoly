@@ -7,6 +7,7 @@ include SYS . 'config.php';
 include SYS . 'db.php';
 include SYS . 'games.php';
 include SYS . 'players.php';
+include SYS . 'chat.php';
 session_start();
 //mb_internal_encoding("UTF-8");
 //date_default_timezone_set('Europe/Moscow');
@@ -68,8 +69,22 @@ case 'mygame':
     echo $game ? $game : 'No Game';
     break;
 case 'joingame':
-    
     break;
+    
+case 'getchat':
+	try {
+		$getchat = Chat::getInstance()->getChatById($_GET['id']);
+		$chat['chat'] = $getchat['msg'];
+	} catch (Exception $e) {
+    die($e->getMessage());
+	}
+	echo json_encode($chat);
+	break;
+case 'sendmessage':
+	$chatid = Chat::getInstance()->addMessage($_SESSION['playerid'], $_GET['msg']);
+	$_SESSION['chatid'] = $chatid;
+	$result['chatid'] = $chatid;
+	break;
 }//end switch
 
 

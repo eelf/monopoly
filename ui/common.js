@@ -133,10 +133,30 @@ function pro() {
     setTimeout('pro();', 200);
 }
 
+/* чат */
+function chat_update()
+{
+	$.getJSON("game.php", {a: 'getchat', id: '1'}, function(data){$("#screen").append(data.chat+"\n");}); 
+	setTimeout('chat_update()', 10000);
+}
+function send_message()
+{
+	message = $('#message').val();
+	$.getJSON("game.php", {a: 'sendmessage', msg: message}, 
+		function(data) {
+			$("#screen").append(data.responseText+"\n");
+		});
+}
+
 /*
 	функция всех функций в общем файле жс
 */
 $(function() {
     pro();
+    chat_update();
     checklogin();
+    
+  $('#log').ajaxSuccess(function(e,d) {$(this).append(d.responseText + "\n");});
+	$('#log').ajaxError(function(e,d) {$(this).append(d.responseText + "\n");});
+
 });
