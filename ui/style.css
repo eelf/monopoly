@@ -30,3 +30,41 @@ body {
 	background-color: #caf;
 	border: 2px solid #98c;
 }
+#log{
+	clear: both;
+}
+
+
+
+#container{
+	width: 800px;
+	margin-left: 14%;
+	margin-top: 1%;
+}
+#gamelist{
+	width: 220px;
+	float: left;
+	text-align: center;
+  background-color: #DEEBF8;
+}
+#chat_container{
+	margin-left: 230px;
+}
+#info_bl{
+	text-align: center;
+	background: #99CCFF;
+	margin-right: 210px;
+  background-color: #99CCFF;
+}
+#login_bl{
+	text-align: center;
+	background: #CCCCCC;
+	width: 200px;
+	float: right;
+  background-color: #CCCCCC;
+}
+#today{
+	line-height: 100px;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-size: 100px;
+}
