@@ -16,6 +16,12 @@ class Games {
     depricated, использовать метод с постраничной разбивкой
     */
     function getAllGames() {
+    /*
+    returns: 
+    	int(10)		varchar(255)	int(10) 		text
+    	creator, 	name, 				maxplayers, players
+    creator - соответствует id игры
+    */
 		$games = DB::getInstance()->getRows("SELECT * FROM games");
 //		$sendToClient = '';
 //		foreach($games as $game) $sendToClient .= "{$game['creator']}:{$game['name']}\n";

@@ -1,7 +1,19 @@
-var dorefresh = false;
+var dorefresh = true;
 var x = false;
 var connectionProblem = false;
 var gameListTemplate = '';
+
+function update_gamelist() {
+	$.getJSON('game.php', {a: 'gamelist'}, 
+		function(data) {
+			if(data != null) {
+				for (var v in data) {
+					$("#gamelist").append(data.responseText);
+				}//for	
+			}//if
+		});
+}
+
 function refresh() {
 	var c = color2rgb($('#proi').css('background-color'));
 	c.g = {0xff:0xaa, 0xaa:0x66, 0x66:0x99, 0x99:0xdd, 0xdd:0xff}[c.g];
@@ -30,6 +42,10 @@ function refresh() {
 	});
     if (dorefresh)
         setTimeout('refresh();', 10000);
+        
+  update_gamelist();
+//юзать либу надо... jчототам
+//*/
 }
 
 /* тут тестил вызов события старта аякса но оно чтото не пашет :(

@@ -12,14 +12,20 @@ class Chat {
     function __construct() {
     }
     function getChatById($id) { //мы знаем id последнего известного нам сообщения, получаем всё что позже
-        $msg = DB::getInstance()->getRows("SELECT * FROM chat WHERE id > '$id'"); // гммм FIXIT
+    /*
+    возвращает: (id, player, msg) // player = id пользователя
+    */
+        $msg = DB::getInstance()->getRows("SELECT * FROM chat WHERE id > '$id'");
         return $msg;
     }
     function addMessage($player, $msg) {	//добавляем сообщение, возвращаем его id
-    // $id - id последнего нам известного сообщения
-    // $player - собственно ник
-    // $msg - собсвтенно сообщение
-        //$player = DB::getInstance()->getRow("SELECT * FROM players WHERE email = '$email'");
+    /*
+		$id - id последнего нам известного сообщения
+		$player - собственно ник
+		$msg - собсвтенно сообщение
+		возвращает: id последнего сообщения
+		*/  
+      //FIXIT проверка на вшивость сообщения, и на кол-во символов, типа 0 низя
 			DB::getInstance()->query("INSERT INTO chat (player, msg) VALUES ($player, '$msg')");
       $resultid = DB::getInstance()->getLastId();
 			return $resultid; // возвращаем id свежедобавленного сообщения

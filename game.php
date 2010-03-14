@@ -15,6 +15,7 @@ session_start();
 $old_error_handler = set_error_handler("myErrorHandler");
 
 //$player = session_id() . str_pad(dechex(ip2long($_SERVER['REMOTE_ADDR'])), 8, '0', false);
+// чо за?
 
 if (!isset($_GET['a'])) die('Nothing');
 
@@ -48,19 +49,25 @@ case 'logout':
     break;
 	
 case 'games':
-    $game = Games::getInstance()->getGameByCreator($_SESSION['playerid']);
+  $game = Games::getInstance()->getGameByCreator($_SESSION['playerid']);
 	$games = Games::getInstance()->getAllGames();
 	echo json_encode(array('mygame'=>$game, 'games'=>$games));
 	break;
-case 'listgames':
-    $games = Games::getInstance()->getAllGames();
-    echo $games ? $games : 'No Games';
-    break;
+case 'gamelist': //отдаем список игр, создатель, игроки, кол-во мест
+	// если игр нет - молчим
+	// если список игр не изменился - молчим
+	try {
+		$games = Games::getInstance()->getAllGames();
+	} catch (Exception $e) {
+    die($e->getMessage());
+	}
+	if(isset($games)) echo json_encode($games);
+  break;
 case 'newgame':
     try {
-    Games::getInstance()->newGame($_SESSION['playerid'], $_GET['name'], $_GET['maxplayers']);
+    	Games::getInstance()->newGame($_SESSION['playerid'], $_GET['name'], $_GET['maxplayers']);
     } catch (Exception $e) {
-    die($e->getMessage());
+    	die($e->getMessage());
     }
     echo "OK";
     break;
@@ -72,6 +79,7 @@ case 'joingame':
     break;
     
 case 'getchat':
+	// если нет новых сообщений - молчим
 	try {
 		$getchat = Chat::getInstance()->getChatById($_GET['id']);
 		foreach ($getchat as $key => $value) {
@@ -84,7 +92,7 @@ case 'getchat':
 	}
 	if(isset($chat)) echo json_encode($chat);
 	break;
-case 'sendmessage':
+case 'sendmessage': //FIXIT всевозможные проверки на эксцепшены, или не надо?
 	$chatid = Chat::getInstance()->addMessage($_SESSION['playerid'], $_GET['msg']);
 	$_SESSION['chatid'] = $chatid;
 	$result['chatid'] = $chatid;
