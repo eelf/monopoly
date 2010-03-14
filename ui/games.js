@@ -1,4 +1,4 @@
-var dorefresh = true;
+var dorefresh = false;
 var x = false;
 var connectionProblem = false;
 var gameListTemplate = '';

@@ -74,11 +74,15 @@ case 'joingame':
 case 'getchat':
 	try {
 		$getchat = Chat::getInstance()->getChatById($_GET['id']);
-		$chat['chat'] = $getchat['msg'];
+		foreach ($getchat as $key => $value) {
+			$chat['chat'][$key]['name'] = Players::getInstance()->getNameById($getchat[$key]['player']);
+			$chat['chat'][$key]['msg'] = $getchat[$key]['msg'];
+			$chat['id'] = $getchat[$key]['id'];
+		}
 	} catch (Exception $e) {
     die($e->getMessage());
 	}
-	echo json_encode($chat);
+	if(isset($chat)) echo json_encode($chat);
 	break;
 case 'sendmessage':
 	$chatid = Chat::getInstance()->addMessage($_SESSION['playerid'], $_GET['msg']);

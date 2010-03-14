@@ -15,6 +15,10 @@ class Players {
         $player = DB::getInstance()->getRow("SELECT * FROM players WHERE name = '$name'");
         return $player;
     }
+    function getNameById($id) {
+        $name = DB::getInstance()->getRow("SELECT * FROM players WHERE id = $id");
+        return $name['name'];
+    }
     function getPlayerByEmail($email) {
         $player = DB::getInstance()->getRow("SELECT * FROM players WHERE email = '$email'");
         return $player;

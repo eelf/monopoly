@@ -134,18 +134,28 @@ function pro() {
 }
 
 /* чат */
-function chat_update()
-{
-	$.getJSON("game.php", {a: 'getchat', id: '1'}, function(data){$("#screen").append(data.chat+"\n");}); 
+var cid;
+function chat_update() {
+	if (cid == null) cid = 0;
+	$.getJSON("game.php", {a: 'getchat', id: cid}, 
+		function(data) {
+		//если переменная data.chat не определна, значит новых сообщений нет
+			if(data.chat != null) for (var v in data.chat)
+				$("#screen").append(data.chat[v].name+": "+data.chat[v].msg+" "+cid+"\n"); 
+			//потом можно сделать имя-ссылка, что бы можно щелкнуть, а оно добавилось в строку сообщения
+			//увеличиваем наш id
+			cid = data.id;
+		}); 
 	setTimeout('chat_update()', 10000);
 }
-function send_message()
-{
+function send_message() {
 	message = $('#message').val();
 	$.getJSON("game.php", {a: 'sendmessage', msg: message}, 
 		function(data) {
 			$("#screen").append(data.responseText+"\n");
+			$('#message').val() = "";
 		});
+	chat_update(); //обновим окно чата, надеюсь таймер будет один а не два?
 }
 
 /*
