@@ -61,13 +61,6 @@ function getCookie(n) {
 	return(r);
 }
 
-
-/* укороченый вызов getElementById, такой же есть в жквери */
-function b(id) {
-    return document.getElementById(id);
-}
-
-
 /* в див с айдишником лог добавляет строку или объект со всеми его свойствами 
    делит содержимое дива на строки \н и оставляет 30 с конца
 */
@@ -88,7 +81,7 @@ function log(str) {
 
 
 // Convert all applicable characters to HTML entities
-function htmlentities(s){
+function htmlentities(s) {
     var div = document.createElement('div');
     var text = document.createTextNode(s);
     div.appendChild(text);
@@ -113,6 +106,7 @@ function req(r, server) {
 
 
 /* ползучка показывающая что яваскрипт работает */
+// не представляю случая, когда js отваливается...
 function pro() {
     //var s = '-\\|/';
     //b('pro').innerHTML = s.charAt((s.indexOf(b('pro').innerHTML) + 1) % s.length);
@@ -134,19 +128,21 @@ function pro() {
 }
 
 /* чат */
-var cid;
+var cid; // latest chat id
 function chat_update() {
-	if (cid == null) cid = 0;
-	$.getJSON("game.php", {a: 'getchat', id: cid}, 
+	if (cid == null) cid = 0; //если не определена, значит впервые видим чат, надо получить всё с первого сообщения
+	//FIXIT а нужно ли? получить всё с самого начала... последние 20 сообщений может нужно, а остальное лишнее?
+	$.getJSON("game.php", {a: 'getchat', id: cid}, // сообщаем последнее известное нам сообщение
 		function(data) {
-		//если переменная data.chat не определна, значит новых сообщений нет
-			if(data.chat != null) for (var v in data.chat)
-				$("#screen").append(data.chat[v].name+": "+data.chat[v].msg+" "+cid+"\n"); 
-			//потом можно сделать имя-ссылка, что бы можно щелкнуть, а оно добавилось в строку сообщения
-			//увеличиваем наш id
-			cid = data.id;
+			if(data != null) { //если переменная data не определна, значит новых сообщений нет
+				for (var v in data.chat)
+					$("#screen").append(data.chat[v].name+": "+data.chat[v].msg+" "+cid+"\n"); 
+					//потом можно сделать имя-ссылка, что бы можно щелкнуть, а оно добавилось в строку сообщения
+					//увеличиваем наш id
+					cid = data.id;
+			}//if
 		}); 
-	setTimeout('chat_update()', 10000);
+	setTimeout('chat_update()', 1000); // раз в секунду
 }
 function send_message() {
 	message = $('#message').val();
@@ -154,19 +150,27 @@ function send_message() {
 		function(data) {
 			$("#screen").append(data.responseText+"\n");
 			$('#message').val() = "";
+			//cid = data.chatid; //FIXIT незнаю.. косяк тут какой-то, с ней может добавиться до 6 сообщений сразу под одним id
 		});
 	chat_update(); //обновим окно чата, надеюсь таймер будет один а не два?
 }
+//FIXIT есть иногда момент времени, когда при отправке сообщения сразу добавляется 2 сообщения, а не одно
+// можно думаю просто убрать chat_update() из send_message(), но тогда появится некашерная задрежка
+// в чате, что бывает очень раздражительно для человека отправившего сообщение
 
 /*
 	функция всех функций в общем файле жс
 */
+function logupdate() {
+  $('#log').ajaxSuccess(function(e,d) {$(this).append(d.responseText);});
+	$('#log').ajaxError(function(e,d) {$(this).append(d.responseText);});
+	setTimeout('pro();', 1000);
+}
 $(function() {
     pro();
     chat_update();
     checklogin();
     
-  $('#log').ajaxSuccess(function(e,d) {$(this).append(d.responseText + "\n");});
-	$('#log').ajaxError(function(e,d) {$(this).append(d.responseText + "\n");});
+	logupdate();
 
 });
