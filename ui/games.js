@@ -3,6 +3,7 @@ var x = false;
 var connectionProblem = false;
 var gameListTemplate = '';
 
+/* О.о два одинаковых метода?
 function update_gamelist() {
 	$.getJSON('game.php', {a: 'gamelist'}, 
 		function(data) {
@@ -13,46 +14,32 @@ function update_gamelist() {
 			}//if
 		});
 }
+*/
+function gameListRequest() {
+	return {a:'games'};
+}
+function gameListListener(games) {
+	if (games['mygame']) {
+		// скрыть форму новой игры
+		//$('#newgame').html('');
+		// показать инфо про созданную игру и кнопки закрытия игры
+		//$('#gamelist').html(games['mygame']['creator'] + games['mygame']['name'] + 
+		//	games['mygame']['maxplayers'] + games['mygame']['players']);
 
-function refresh() {
-	var c = color2rgb($('#proi').css('background-color'));
-	c.g = {0xff:0xaa, 0xaa:0x66, 0x66:0x99, 0x99:0xdd, 0xdd:0xff}[c.g];
-	//$('#proi').css('background-color', rgb2color(c));   вызывает ошибку
-
-	$.getJSON('game.php', {a: 'games'}, function gamesC(games) {
-		if (games['mygame']) {
-			// скрыть форму новой игры
-			//$('#newgame').html('');
-			// показать инфо про созданную игру и кнопки закрытия игры
-			//$('#gamelist').html(games['mygame']['creator'] + games['mygame']['name'] + 
-			//	games['mygame']['maxplayers'] + games['mygame']['players']);
-
-		} else if (games['games'].length) {
-			if (gameListTemplate == '') gameListTemplate = req('', 'ui/html/gamelist.html');
-			o = '';
-			for(var i in games['games']) {
-				tmp = gameListTemplate;
-				tmp = tmp.replace('{GAME}', games['games'][i][1]).replace('{CREATOR}', games['games'][i][0]);
-				o += tmp;
-			}
-			$('#gamelist').html(o);
-		} else {
-			$('#gamelist').text('No Games');
+	} else if (games['games'].length) {
+		if (gameListTemplate == '') gameListTemplate = req('', 'ui/html/gamelist.html');
+		o = '';
+		for(var i in games['games']) {
+			tmp = gameListTemplate;
+			tmp = tmp.replace('{GAME}', games['games'][i][1]).replace('{CREATOR}', games['games'][i][0]);
+			o += tmp;
 		}
-	});
-    if (dorefresh)
-        setTimeout('refresh();', 10000);
-        
-  update_gamelist();
-//юзать либу надо... jчототам
-//*/
+		$('#gamelist').html(o);
+	} else {
+		$('#gamelist').text('No Games');
+	}
 }
 
-/* тут тестил вызов события старта аякса но оно чтото не пашет :(
-$('#log').ajaxStart(function() {
-	alert('!!');
-});
-*/
 
 function newgame() {
     var name = b('gamename').value;

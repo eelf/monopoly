@@ -1,5 +1,5 @@
 function shownewplayer() {
-    b('x').innerHTML = req('', ui + 'loginnew.html');
+	$('body').processTemplate({page:'loginnew'});
 }
 function login() {
     var email = $('#email').val();
@@ -10,8 +10,10 @@ function login() {
 	$.getJSON('game.php', {a: 'login', email: email, password: kpassword}, function loginC(loginO) {
 		if (loginO['auth'] != 'OK') alert(loginO['auth']);
 		else {
-			$.get(ui + 'games.html', function(html) { $('#x').html(html); });
-			refresh();
+			$('body').processTemplate({page:'games'});
+			registerUpdateListener(10000, gameListRequest, gameListListener);
+			registerUpdateListener(10000, chatUpdateRequest, chatUpdateListener);
+			//refresh();
 		}
 	});
 }
@@ -23,10 +25,14 @@ function logout() {
 }
 function checklogin() {
     playerid = getCookie('playerid');
-    if (playerid == 0) $.get(ui + 'login.html', function(html) { $('#x').html(html); });
+    if (playerid == 0) //$.get(ui + 'login.html', function(html) { $('#x').html(html); });
+		$('body').processTemplate({page:'login'});
     else {
-			$.get(ui + 'games.html', function(html) { $('#x').html(html); });
-      refresh();
+		$('body').processTemplate({page:'games'});
+		//$.get(ui + 'games.html', function(html) { $('#x').html(html); });
+		registerUpdateListener(10000, gameListRequest, gameListListener);
+		registerUpdateListener(10000, chatUpdateRequest, chatUpdateListener);
+		//refresh();
     }
 }
 function newplayer() {

@@ -61,24 +61,6 @@ function getCookie(n) {
 	return(r);
 }
 
-/* в див с айдишником лог добавляет строку или объект со всеми его свойствами 
-   делит содержимое дива на строки \н и оставляет 30 с конца
-*/
-function log(str) {
-    if (typeof(str) == 'object') {
-        var o = '';
-        for(var i in str) o += i + ':' + str[i];
-        str = o;
-    }
-	$('#log').append('<div>' + str + '</div>');
-	$('#log').html($('#log > div').slice(-25));
-	/*
-    b('log').innerHTML = b('log').innerHTML + str + "<br>\n";
-    lines = b('log').innerHTML.split("\n");
-    b('log').innerHTML = lines.slice(-30).join("\n");
-	*/
-}
-
 
 // Convert all applicable characters to HTML entities
 function htmlentities(s) {
@@ -88,89 +70,70 @@ function htmlentities(s) {
     return div.innerHTML;
 }
 
-
-/* делает синхронный (типа браузер подвисает пока запрос не завершится)
-   хттп запрос, сервер - файл скрипта обработки запроса гейм.пхп подефлоту */
-function req(r, server) {
-    if (server == undefined) server = 'game.php?';
-    if (dev) log('req(' + server + r + ')');
-    x.open('GET', server + r, false);
-    x.send(null);
-    if (x.status != 200) {
-        connectionProblem = true;
-        return '';
+/* в див с айдишником лог добавляет строку или объект со всеми его свойствами 
+   делит содержимое дива на строки \н и оставляет 30 с конца
+*/
+function log(str) {
+    if (typeof(str) == 'object') {
+        var o = '';
+        for(var i in str) o += i + ':' + str[i]+',';
+        str = o;
     }
-    if (dev) log('response=' + htmlentities(x.responseText)+'=end');
-    return x.responseText;
+	$('#log').append('<div>' + str + '</div>');
+	$('#log').html($('#log > div').slice(-25));
 }
 
+var updateListeners = [];
+/*
+это конечно легко и просто можно понавешать тыщу функций которые будут вызывать себя каждую
+секунду каждая из них, но бля сервак просто ахуеет от одного такого пользователя который
+с каждой из своих 10 ебучих функций будет посылать один отдельный запрос хДДД
 
-/* ползучка показывающая что яваскрипт работает */
-// не представляю случая, когда js отваливается...
-function pro() {
-    //var s = '-\\|/';
-    //b('pro').innerHTML = s.charAt((s.indexOf(b('pro').innerHTML) + 1) % s.length);
-
-	var left = parseInt($('#proi').css('left'));
-	var width = parseInt($('#proi').css('width'));
-	width += 2;
-	if (width > 100) {
-		witdh = 100;
-		left += 2;
-		if (left > 100) { 
-			left = 0; 
-			width = 0; 
-		}
+вощем есть единая куита для апдейта. каждая куйня которая хочет периодически получать
+данные от сервера по своему вопросу регистрируется вот тут
+сообщая желаемый интервал обновления (не сделано - нада сделать, а можно и не делать)
+а также указывает функцию которую нада вызвать чтобы добавить параметров в запрос
+и функцию которую вызвать когда придёт ответ. ответ будет общий, так что каждая
+куита должна из общего ответа выбрать чтото своё
+*/
+function registerUpdateListener(interval, request, callback) {
+	updateListeners.push({interval:interval, request:request, callback:callback});
+}
+/* собственно единая обновлялка
+чат хочет сделать запрос а=гетчат и свой параметр чатайди=число
+геймлист запрос а=геймс без параметров
+таким образом это всё можно объеденить в а=геймс&б=гетчат&чатайди=123
+*/
+function update() {
+	if (updateListeners.length) {
+	var seq = 'abcdef';
+	var request = {};
+	for(var i in updateListeners) {
+		var req = updateListeners[i].request();
+		req[seq.charAt(i)] = req['a'];
+		request = jQuery.extend(req, request);
 	}
-	$('#proi').css('left', left + 'px');
-	$('#proi').css('width', width + 'px');
-    setTimeout('pro();', 200);
+	//log(request);
+	$.getJSON("game.php", request, function fn(data) {
+	//log(data);
+		for(var i in updateListeners) {
+			updateListeners[i].callback(data);
+		}
+	});
+	}
+	setTimeout('update()', 5000);
 }
 
-/* чат */
-var cid; // latest chat id
-function chat_update() {
-	if (cid == null) cid = 0; //если не определена, значит впервые видим чат, надо получить всё с первого сообщения
-	//FIXIT а нужно ли? получить всё с самого начала... последние 20 сообщений может нужно, а остальное лишнее?
-	$.getJSON("game.php", {a: 'getchat', id: cid}, // сообщаем последнее известное нам сообщение
-		function(data) {
-			if(data != null) { //если переменная data не определна, значит новых сообщений нет
-				for (var v in data.chat)
-					$("#screen").append(data.chat[v].name+": "+data.chat[v].msg+" "+cid+"\n"); 
-					//потом можно сделать имя-ссылка, что бы можно щелкнуть, а оно добавилось в строку сообщения
-					//увеличиваем наш id
-					cid = data.id;
-			}//if
-		}); 
-	setTimeout('chat_update()', 1000); // раз в секунду
-}
-function send_message() {
-	message = $('#message').val();
-	$.getJSON("game.php", {a: 'sendmessage', msg: message}, 
-		function(data) {
-			$("#screen").append(data.responseText+"\n");
-			$('#message').val() = "";
-			//cid = data.chatid; //FIXIT незнаю.. косяк тут какой-то, с ней может добавиться до 6 сообщений сразу под одним id
-		});
-	chat_update(); //обновим окно чата, надеюсь таймер будет один а не два?
-}
-//FIXIT есть иногда момент времени, когда при отправке сообщения сразу добавляется 2 сообщения, а не одно
-// можно думаю просто убрать chat_update() из send_message(), но тогда появится некашерная задрежка
-// в чате, что бывает очень раздражительно для человека отправившего сообщение
 
 /*
 	функция всех функций в общем файле жс
 */
-function logupdate() {
-  $('#log').ajaxSuccess(function(e,d) {$(this).append(d.responseText);});
-	$('#log').ajaxError(function(e,d) {$(this).append(d.responseText);});
-	setTimeout('pro();', 1000);
-}
 $(function() {
-    pro();
-    chat_update();
+	$('body').setTemplateURL(ui + 'templates.tpl');
+	$('body').processTemplate({});
+    //chat_update();
     checklogin();
-    
-	logupdate();
-
+	update();
+	$('#log').ajaxSuccess(function(e,d) {$(this).append(d.responseText + '<br/>');});
+	$('#log').ajaxError(function(e,d) {$(this).append(d.responseText);});
 });
