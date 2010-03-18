@@ -103,15 +103,17 @@ function registerUpdateListener(interval, request, callback) {
 чат хочет сделать запрос а=гетчат и свой параметр чатайди=число
 геймлист запрос а=геймс без параметров
 таким образом это всё можно объеденить в а=геймс&б=гетчат&чатайди=123
+с разными буквами вышла ебата :), поправил на массив АА
 */
 function update() {
 	if (updateListeners.length) {
-	var seq = 'abcdef';
-	var request = {};
+	//var seq = 'abcdef';
+	var request = {aa:[]};
 	for(var i in updateListeners) {
 		var req = updateListeners[i].request();
-		req[seq.charAt(i)] = req['a'];
-		request = jQuery.extend(req, request);
+		//req[seq.charAt(i)] = req['a'];
+		request = jQuery.extend(request, req);
+		request['aa'].push(req['a']);
 	}
 	//log(request);
 	$.getJSON("game.php", request, function fn(data) {

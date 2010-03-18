@@ -125,14 +125,14 @@ class Game {
 чуток подправил геймсервер, чтобы он вёл себя как мультизапросный геймсервер,
 т.е. мог отвечать сразу на несколько запросов, см. коммон.жс:88  (88-это номер строки ;))
 */
-
+if (!isset($_GET['a'])) die('Request empty');
 $game = new Game();
-$seq = array('a','b','c');
+//$seq = array('a','b','c');
 $ret = array();
-foreach($seq as $el) {
-	if (!isset($_GET[$el])) break;//die('Request empty');
-	if (!preg_match('/^[a-z]{3,20}$/', $_GET[$el])) die('Request wrong');
-	if (!method_exists($game, $_GET[$el])) die('Request handler inexistent');
-	$ret = array_merge($ret, $game->$_GET[$el]());
+if (!isset($_GET['aa'])) $_GET['aa'] = array($_GET['a']);
+foreach($_GET['aa'] as $el) {
+	if (!preg_match('/^[a-z]{3,20}$/', $el)) die('Request wrong');
+	if (!method_exists($game, $el)) die('Request handler inexistent');
+	$ret = array_merge($ret, $game->$el());
 }
 echo json_encode($ret);
