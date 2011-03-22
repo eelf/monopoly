@@ -18,10 +18,10 @@
 		position:absolute;
 		left:82px;
 		top:52px;
-		width:400px;
+		width:380px;
 		height:430px;
 		background-color:#000;
-		color:#080;
+		color:#0f0;
 		white-space:pre-line;
 		overflow-y: scroll;
 	}
@@ -39,8 +39,8 @@
 		position:absolute;
 		left:482px;
 		top:52px;
-		width:320px;
-		height:450px;
+		width:310px;
+		height:430px;
 		background-color:#444;
 		color: #ddd;
 		padding: 5px;

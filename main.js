@@ -74,6 +74,7 @@ $(function(){
 		var el = $('<div class="ff">').append(title).append(spl[0]).append(price).css('top', top + 'px').css('left', left + 'px');
 		$('#abs-cont').append(el);
 
+		/*
 		var token = ''
 		for (var j in players) {
 			if (players[j]['props'].indexOf(i) !== false) {
@@ -104,7 +105,7 @@ $(function(){
 			}
 			
 		}
-
+		*/
 		if (i < 10) left -= width;
 		else if (i < 20) top -= height;
 		else if (i < 30) left += width;

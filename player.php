@@ -1,70 +1,18 @@
 <?php
 
+class Player extends WSUser {
 
-
-class Player {
-/*
-	private $id;
-	private $name;
-	private $token;
 	private $cash;
-	private $properties;
 	private $place;
+	private $properties;
 	private $jail;
-	private $ready;
-	private $debt;
-*/
-	private $data = array();
-	function __construct($id = 0, $name = '', $ready = 0, $token = '') {
-		$this->id = $id;
-		$this->name = $name;
-		$this->ready = $ready;
-		$this->token = $token;
+
+	function __construct($sock, $address, $port) {
+		parent::__construct($sock, $address, $port);
 		$this->cash = 1500;
 		$this->place = 0;
 		$this->properties = array();
-		$this->debt = 0;
 		$this->jail = new Jail();
-	}
-	function __get($name) {
-        if (array_key_exists($name, $this->data)) {
-            return $this->data[$name];
-        }
-        $trace = debug_backtrace();
-        trigger_error(
-            'Undefined property via __get(): ' . $name .
-            ' in ' . $trace[0]['file'] .
-            ' on line ' . $trace[0]['line'],
-            E_USER_NOTICE);
-        return null;        		
-	}
-	function __set($name, $value) {
-		$this->data[$name] = $value;
-	}
-
-	
-	function unser($unser) {
-		$a = json_decode($unser, true);
-		$this->id = $a['id'];
-		$this->name = $a['name'];
-		$this->token = $a['token'];
-		$this->cash = $a['cash'];
-		$this->properties = $a['properties'];
-		$this->place = $a['place'];
-		$this->jail = new Jail();
-		$this->jail->unser($a['jail']);
-	}
-
-	function ser() {
-		return json_encode(array(
-			'id'=>$this->id,
-			'name'=>$this->name,
-			'token'=>$this->token,
-			'cash'=>$this->cash,
-			'properties'=>$this->properties,
-			'place'=>$this->place,
-			'jail'=>$this->jail->ser()
-		));
 	}
 
 
@@ -98,7 +46,6 @@ class Player {
 		if ($this->jail->rounds > 0 && $this->jail->chance) $actions []= 'chance';
 		if ($this->jail->rounds > 0 && $this->jail->chest) $actions []= 'chest';
 		if ($this->jail->rounds > 0) $actions []= 'jail';
-		if ($this->debt['sum'] == 0 && !in_array('roll', $actions)) $actions []= 'roll';
 		return $actions;
 	}
 
