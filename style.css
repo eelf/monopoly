@@ -1,0 +1,60 @@
+	body { font: 9px consolas, "Lucida Grande", Verdana, Arial, sans-serif; 
+		background-color: #86e;
+	}
+	/*
+	#abs-cont {
+		position:absolute; 
+		left:100px;
+	}
+	*/
+	.ff { position: absolute; 
+		width:80px; 
+		height:50px;
+		background-color: #eed;
+		border: 1px solid #777;
+		text-align: center;
+		}
+	#chat {
+		position:absolute;
+		left:82px;
+		top:52px;
+		width:400px;
+		height:430px;
+		background-color:#000;
+		color:#080;
+		white-space:pre-line;
+		overflow-y: scroll;
+	}
+	#chat_type {
+		position:absolute;
+		left:82px;
+		top:482px;
+		width:400px;
+		height:20px;
+		background-color:#000;
+		color:#0f0;
+
+	}
+	#controls {
+		position:absolute;
+		left:482px;
+		top:52px;
+		width:320px;
+		height:450px;
+		background-color:#444;
+		color: #ddd;
+		padding: 5px;
+	}
+	.act-btn {
+		border:1px solid #777;
+		background-color: #eed;
+		color: #222;
+		text-decoration: none;
+		padding: 5px;
+		cursor: default;
+	}
+	.act-btn:hover {
+		background-color: #222;
+		color: #eed;
+	}
+	

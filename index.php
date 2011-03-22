@@ -1,4 +1,41 @@
 <?php
+
+
+include 'gamelist.php';
+include 'player.php';
+include 'game.php';
+include 'session.php';
+include 'db.php';
+include 'config.php';
+include 'template.php';
+include 'turn.php';
+include 'jail.php';
+include 'dice.php';
+
+function predump($var) {
+	echo '<pre>'; var_dump($var); echo '</pre>';
+}
+
+$config = Config::$config;
+try {
+$db = new Db($config);
+
+$sess = new Session($db);
+
+if (!$sess->isLogged()) {
+	$tpl = new Template('login.tpl');
+	echo $tpl->build($sess->getTpl());
+} else {
+	$games = new Games($db, $sess);		
+
+}
+} catch (Exception $e) {
+	echo $e->getTraceAsString();
+	predump($e->getMessage());
+}
+
+
+
 session_start();
 $ip = isset($_SESSION['ip']) ? $_SESSION['ip'] : $_SERVER['REMOTE_ADDR'];
 $_SESSION['ip'] = $ip;
