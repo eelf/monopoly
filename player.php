@@ -6,17 +6,23 @@ class Player extends WSUser {
 	private $place;
 	private $properties;
 	private $jail;
+	private $isReady;
+	private $game;
+	public $name;
 
-	function __construct($sock, $address, $port) {
+	function __construct($game, $sock, $address, $port) {
 		parent::__construct($sock, $address, $port);
+		$this->game = $game;
 		$this->cash = 1500;
 		$this->place = 0;
 		$this->properties = array();
 		$this->jail = new Jail();
+		$this->isReady = false;
+		$this->name = $address . ':' . $port;
 	}
 
 
-	function propertyAction($idx, $property) {
+	function propertyActions($idx, $property) {
 		$actions = array();
 
 		if (!isset($property['notprop'])) {
@@ -82,18 +88,6 @@ class Player extends WSUser {
 			'mortgaged'=>$r_mort
 			
 			);
-	}
-	function getState() {
-		if ($this->ready == 0) return Games::PLAYER_NOTREADY;
-		if ($this->ready == -1) return Games::PLAYER_SPECTATE;
-		return Games::PLAYER_READY;
-		 
-	}
-	function getStateTpl() {
-		if ($this->ready == 0) return 'NOTREADY';
-		if ($this->ready == -1) return 'SPECT';
-		return 'READY';
-		 
 	}
 
 	function isMonopoly($idx) {

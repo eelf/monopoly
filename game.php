@@ -12,17 +12,47 @@ class Game extends WSUserManager {
 	private $chance;
 	private $chest;
 	private $turn;
+	private $isStarted;
 
 	function __construct() {
 		parent::__construct();
+		$this->isStarted = false;
 
 
 	}
 	function add($sock, $address, $port) {
-		$this->users []= new Player($sock, $address, $port);
+		$this->chat("player connected from $address:$port");
+		$this->users []= new Player($this, $sock, $address, $port);
 	}
 	function message($user, $msg) {
+		$msg = json_decode($msg, true);
+		if ($msg == null || !isset($msg['a'])) return;
+		if ($msg['a'] == 'roll') {
+			$sum = Dice::roll();
+			$str = Dice::toString();
+			$text = "{$user->name} rolled $str";
+			$this->chat($text);
+		}
+		if ($msg['a'] == 'rename' && isset($msg['name'])) {
+			$name = $msg['name'];
+			foreach($this->users as $usereach)
+				if ($usereach->name == $name) {
+					$data = array('a'=>'chat', 'text'=>'name already in use');
+					$this->reply($user, json_encode($data));
+					return;
+				}
+			$user->name = $name;
+		}
+		if ($msg['a'] == 'chat' && isset($msg['text'])) {
+			$this->chat($user->name . ': ' . $msg['text']);
+		}
+	}
 	
+	function chat($text) {
+		foreach($this->users as $user) {
+			$data = array('a'=>'chat', 'text'=>$text);
+			$this->reply($user, json_encode($data));
+		}
 	}
 
 

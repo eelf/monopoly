@@ -1,34 +1,73 @@
 <?php
-
-?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html>
+	$remote = $_SERVER['REMOTE_ADDR'];
+	$server = ($remote == '192.168.88.33') ? '192.168.88.33' : 'ezh.mine.nu';
+?><html>
 <head>
 <title>Game</title>
-<link rel="stylesheet" href="style.css" type="text/css"/>
 <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="js/jquery-jtemplates_uncompressed.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<!--script type="text/javascript" src="ui/algo.js"></script-->
-<!--script type="text/javascript" src="ui/common.js"></script>
-<script type="text/javascript" src="ui/chat.js"></script>
-<script type="text/javascript" src="ui/login.js"></script>
-<script type="text/javascript" src="ui/games.js"></script-->
-<!--script type="text/javascript">
+<!--script type="text/javascript" src="js/jquery-jtemplates_uncompressed.js"></script-->
 
+<script type="text/javascript">
+// implement JSON.stringify serialization
+JSON = {};
+JSON.stringify = JSON.stringify || function (obj) {
+    var t = typeof (obj);
+    if (t != "object" || obj === null) {
+        // simple data type
+        if (t == "string") obj = '"'+obj+'"';
+        return String(obj);
+    }
+    else {
+        // recurse array or object
+        var n, v, json = [], arr = (obj && obj.constructor == Array);
+        for (n in obj) {
+            v = obj[n]; t = typeof(v);
+            if (t == "string") v = '"'+v+'"';
+            else if (t == "object" && v !== null) v = JSON.stringify(v);
+            json.push((arr ? "" : '"' + n + '":') + String(v));
+        }
+        return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+    }
+};
+
+$(function(){
 	chat = {};
-	chat.a = document.getElementById('chat');
 	chat.add = function(str) {
-		self.a.innerHTML = str + '<br>' + self.a.innerHTML;
+		//$('#c').html(str + '<br>' + $('#c').html());
+		$('#c').prepend('<div>' + str + '</div>');
+		$('#c').html($('#c > div').slice(0, 15));		
 	};
-
+	chat.send = function(text) {
+		var t = {a:'chat', 'text':text};
+		ws.send(JSON.stringify(t));
+	}
+	$('#a').keypress(function(e){
+		if (e.which == 13) {
+			e.preventDefault();
+			chat.send(this.value);
+			$(this).val('');
+		}
+	});
+	$('#roll').click(function(e){
+		var t = {a:'roll'};
+		ws.send(JSON.stringify(t));
+	});
+	$('#rename').click(function(e){
+		var t = {a:'rename', name:$('#a').val()};
+		$('#a').val('');
+		ws.send(JSON.stringify(t));
+	});
 	if ("WebSocket" in window) {
-		var ws = new WebSocket("ws://127.0.0.1:8001/");
+		var ws = new WebSocket("ws://<?= $server; ?>:8001/");
 		ws.onopen = function() {
 			chat.add("game opened");
-			ws.send("a test message");
+			var t = {a:'helo'};
+			ws.send(JSON.stringify(t));
 		}
 		ws.onmessage = function(e) {
-			chat.add("&gt; " + e.data);
+			msg = $.parseJSON(e.data);
+			if (msg.a == 'chat')
+				chat.add("&gt; " + msg.text);
 		}
 		ws.onclose = function() {
 			chat.add("game closed");
@@ -36,12 +75,14 @@
 	} else {
 		alert("No WebSockets support");
 	}
-</script-->
+
+});
+</script>
 </head>
 <body>
-<div id="abs-cont"></div>
-<div id="chat">123</div>
-<div id="controls">66</div>
-
+<input type="text" id="a"/>
+<input type="button" id="roll" value="roll"/>
+<input type="button" id="rename" value="rename"/>
+<div id="c"></div>
 </body>
 </html>

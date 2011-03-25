@@ -11,6 +11,7 @@ class WSUser {
 		$this->address = $address;
 		$this->port = $port;
 	}
+
 	function keydivnum($key) {
 		$numkey = '';
 		$spaces = 0;
@@ -51,31 +52,40 @@ class WSUser {
 
 class WSUserManager {
 	public $users;
+	protected $server;
 	function __construct() {
 		$this->users = array();
+	}
+	function registerServer($server) {
+		$this->server = $server;
 	}
 	function add($sock, $address, $port) {
 		$this->users []= new WSUser($sock, $address, $port);
 	}
 	function fillSelect(&$select) {
+		//var_dump($this->users);
 		foreach($this->users as $user)
 			$select []= $user->sock;
 	}
-	function close($user) {
-		foreach($this->users as $idx => $usersea)
-			if ($user == $usersea) {
-				unset($user);
-				unset($this->users[$idx]);
-				break;
-			}
+	function close($sock) {
+		$idx = $this->getIdxBySock($sock);
+		unset($this->users[$idx]);
 	}
-	function getBySock($sock) {
+	function getIdxBySock($sock) {
 		foreach($this->users as $idx => $user)
+			if ($user->sock == $sock)
+				return $idx;
+	}	
+	function getBySock($sock) {
+		foreach($this->users as $idx => &$user)
 			if ($user->sock == $sock)
 				return $user;
 	}
 	function message($user, $data) {
 		return $data;
+	}
+	function reply($user, $data) {
+		$this->server->send($user, $data);
 	}
 
 }
@@ -83,9 +93,14 @@ class WSUserManager {
 class WebSockServer {
 
 	function __construct($um) {
-		$server = socket_create_listen(8001);
+		$um->registerServer($this);
+		
+		//$server = socket_create_listen(8001);
+		$server = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		if ($server === false)
 			die('socket_create_listen failed');
+		socket_bind($server, '192.168.88.33', 8001);
+		socket_listen($server);
 		echo "listening\n";
 			
 		while (true) {
@@ -103,19 +118,20 @@ class WebSockServer {
 					$address = $port = '';
 					socket_getpeername($client, $address, $port);
 					$um->add($client, $address, $port);
-					echo "client connected\n";
+					echo "client connected $address:$port\n";
 
 				} else {
 					$user = $um->getBySock($sock);
 					$data = socket_read($sock, 1024);
 					if (!$data) {
+						echo "client disconnected {$user->address}:{$user->port}\n";
+						$um->close($sock);
 						socket_close($sock);
-						$um->close($user);
-						echo "client disconnected\n";
 					} else if ($user->ishandshake) {
 						$data = substr($data, 1, -1);
 						$reply = $um->message($user, $data);
-						socket_write($user->sock,  chr(0) . $reply . chr(255));
+						if ($reply)
+							socket_write($user->sock,  chr(0) . $reply . chr(255));
 					} else {
 						socket_write($user->sock, $user->handshake($data));
 					}
@@ -123,5 +139,8 @@ class WebSockServer {
 				}
 			}
 		}	
+	}
+	function send($user, $data) {
+		socket_write($user->sock,  chr(0) . $data . chr(255));
 	}
 }
