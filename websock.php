@@ -87,6 +87,11 @@ class WSUserManager {
 	function reply($user, $data) {
 		$this->server->send($user, $data);
 	}
+	function hsComplete($user) {
+	}
+	
+	function tick() {
+	}
 
 }
 
@@ -103,6 +108,7 @@ class WebSockServer {
 		socket_listen($server);
 		echo "listening\n";
 			
+		$tick = time();
 		while (true) {
 			$socks = array($server);
 			$um->fillSelect($socks);
@@ -111,6 +117,7 @@ class WebSockServer {
 			$select = socket_select($socks, $socksempty, $socksempty, 5);
 			if ($select === false)
 				die("select fail\n");
+				
 
 			foreach($socks as $sock) {
 				if ($sock == $server) {
@@ -134,10 +141,18 @@ class WebSockServer {
 							socket_write($user->sock,  chr(0) . $reply . chr(255));
 					} else {
 						socket_write($user->sock, $user->handshake($data));
+						$um->hsComplete($user);
 					}
 					
 				}
 			}
+			
+			if (time() - $tick > 4) {
+				$um->tick();
+				$tick = time();
+			}
+			
+			
 		}	
 	}
 	function send($user, $data) {

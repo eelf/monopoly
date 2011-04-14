@@ -2,12 +2,12 @@
 
 class Player extends WSUser {
 
-	private $cash;
-	private $place;
-	private $properties;
-	private $jail;
-	private $isReady;
-	private $game;
+	public $cash;
+	public $place;
+	public $properties;
+	public $jail;
+	public $isReady;
+	public $game;
 	public $name;
 
 	function __construct($game, $sock, $address, $port) {
@@ -47,8 +47,8 @@ class Player extends WSUser {
 		
 		foreach($this->properties as $idx => $property)
 			$actions = array_merge($actions, $this->properyActions($idx, $property, $actions));
-					
-		if ($this->jail->rounds > 0 && $this->jail->rounds < 4) $actions []= 'roll';
+		
+		if ($this->jail->rounds < 4) $actions []= 'roll';
 		if ($this->jail->rounds > 0 && $this->jail->chance) $actions []= 'chance';
 		if ($this->jail->rounds > 0 && $this->jail->chest) $actions []= 'chest';
 		if ($this->jail->rounds > 0) $actions []= 'jail';

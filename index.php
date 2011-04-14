@@ -4,6 +4,7 @@
 ?><html>
 <head>
 <title>Game</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
 <!--script type="text/javascript" src="js/jquery-jtemplates_uncompressed.js"></script-->
 
@@ -14,7 +15,7 @@ JSON.stringify = JSON.stringify || function (obj) {
     var t = typeof (obj);
     if (t != "object" || obj === null) {
         // simple data type
-        if (t == "string") obj = '"'+obj+'"';
+        if (t == "string") obj = '"'+obj.replace(/\"/g, '\\"')+'"';
         return String(obj);
     }
     else {
@@ -22,9 +23,10 @@ JSON.stringify = JSON.stringify || function (obj) {
         var n, v, json = [], arr = (obj && obj.constructor == Array);
         for (n in obj) {
             v = obj[n]; t = typeof(v);
-            if (t == "string") v = '"'+v+'"';
-            else if (t == "object" && v !== null) v = JSON.stringify(v);
-            json.push((arr ? "" : '"' + n + '":') + String(v));
+            //if (t == "string") v = '"'+v.replace("\"", "\\\"")+'"';
+            //else if (t == "object" && v !== null) 
+			v = String(JSON.stringify(v));
+            json.push( (arr ? "" : '"' + n + '":') + v );
         }
         return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
     }
@@ -48,6 +50,10 @@ $(function(){
 			$(this).val('');
 		}
 	});
+	$('#ready').click(function(e){
+		var t = {a:'ready'};
+		ws.send(JSON.stringify(t));
+	});
 	$('#roll').click(function(e){
 		var t = {a:'roll'};
 		ws.send(JSON.stringify(t));
@@ -61,8 +67,8 @@ $(function(){
 		var ws = new WebSocket("ws://<?= $server; ?>:8001/");
 		ws.onopen = function() {
 			chat.add("game opened");
-			var t = {a:'helo'};
-			ws.send(JSON.stringify(t));
+			//var t = {a:'helo'};
+			//ws.send(JSON.stringify(t));
 		}
 		ws.onmessage = function(e) {
 			msg = $.parseJSON(e.data);
@@ -81,6 +87,7 @@ $(function(){
 </head>
 <body>
 <input type="text" id="a"/>
+<input type="button" id="ready" value="ready"/>
 <input type="button" id="roll" value="roll"/>
 <input type="button" id="rename" value="rename"/>
 <div id="c"></div>
