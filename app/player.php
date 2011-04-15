@@ -6,21 +6,87 @@ class Player extends WSUser {
 	public $place;
 	public $properties;
 	public $jail;
-	public $isReady;
 	public $game;
 	public $name;
+	public $debt;
+	public $debtplayer;
+	public $canBuyOrAuc;
+	public $chest;
+	public $chance;
 
 	function __construct($game, $sock, $address, $port) {
 		parent::__construct($sock, $address, $port);
 		$this->game = $game;
 		$this->cash = 1500;
 		$this->place = 0;
+		$this->debt = 0;
+		$this->debtplayer = null;
 		$this->properties = array();
 		$this->jail = new Jail();
-		$this->isReady = false;
 		$this->name = $address . ':' . $port;
+		$this->canBuyOrAuc = false;
 	}
 
+	function pay($amount, $whom) {
+		if ($this->cash < $amount) {
+			$this->debt = $amount;
+			$this->debtplayer = $whom;
+			return false;
+		} else {
+			$this->cash -= $amount;
+			if ($whom instanceof Player)
+				$whom->cash += $amount;
+		}
+		return true;
+	}
+	
+	function payForHouseHotel($house, $hotel) {
+		$pay = 0;
+		foreach($this->properties as $property) {
+			if ($property->class == 'prop')
+				if ($property->houses > 0 && $property->houses < 5)
+					$pay += $property->houses * $house;
+				else if ($property->houses == 5)
+					$pay += $hotel;
+		}
+		return $this->pay($pay, 0);
+	}
+	
+	function roll() {
+		
+		if ($this->jail->isInside()) {
+			if ($this->jail->escape()) {
+				$this->place += Dice::sum();
+				$this->game->chat("{$this->name} Rolled double and got out of jail");
+			}
+		} else {
+			if ($this->jail->checkDouble()) {
+				$this->place = 10;
+				$this->game->chat("{$this->name} Rolled double three times and going to jail");
+				return;
+			} else {
+				$this->place += Dice::sum();
+			}
+		}
+		
+		$newplace = $this->place % 40;
+		if ($newplace < $this->place) {
+			$this->advanceGo();
+			$this->place = $newplace;
+		}
+		
+		$cell = $this->game->getCell($this->place);
+		$cell->action($this);
+
+		
+		return true;
+	}
+	
+	function advanceGo() {
+		$this->place = 0;
+		$cell = $this->game->getCell($this->place);
+		$cell->action($this);
+	}
 
 	function propertyActions($idx, $property) {
 		$actions = array();
@@ -56,89 +122,6 @@ class Player extends WSUser {
 	}
 
 
-
-	function getProperties() {
-		return $this->properties;
-	}
-	function setProperty($idx, &$property) {
-		$this->properties[$idx] = $property;
-	}
-	function render() {
-		$r_mort = $r_hotel = $r_house4 = $r_house3 = $r_house2 = $r_house1 = $r_prop = array();
-		foreach($this->properties as $idx=>$property) {
-			$r_prop []= $idx;
-			if ($property['houses'] == 1) $r_house1 []= $idx;
-			if ($property['houses'] == 2) $r_house2 []= $idx;
-			if ($property['houses'] == 3) $r_house3 []= $idx;
-			if ($property['houses'] == 4) $r_house4 []= $idx;
-			if ($property['houses'] == 5) $r_hotel []= $idx;
-			if ($property['mortgaged']) $r_mort []= $idx;
-		}
-		return array('id'=>$this->id,
-			'name'=>$this->name,
-			'token'=>$this->token,
-			'cash'=>$this->cash,
-			'place'=>$this->place,
-			'props'=>$r_prop,
-			'houses1'=>$r_house1,
-			'houses2'=>$r_house2,
-			'houses3'=>$r_house3,
-			'houses4'=>$r_house4,
-			'hotels'=>$r_hotel,
-			'mortgaged'=>$r_mort
-			
-			);
-	}
-
-	function isMonopoly($idx) {
-		foreach($this->property[$idx]['group'] as $property)
-			if (!array_key_exists($property, $this->property)) return false;
-		return true;
-	}
-
-	
-	function calcRent($idx) {
-		if(isset($this->properties[$idx]['notprop']) && $this->properties[$idx]['notprop'] == 1) {
-			$rent = 25;
-			foreach($this->properties[$idx]['group'] as $gidx)
-				if (array_key_exists($gidx, $this->properties)) $rent *= 2;
-		} else if(isset($this->properties[$idx]['notprop']) && $this->properties[$idx]['notprop'] == 2) {
-			$rent = 4;
-			if (array_key_exists($this->properties[$idx]['group'][0], $this->properties)) $rent = 10;
-			$rent *= Dice::sum();
-		} else {
-			if ($this->properties[$idx]['houses']) $rent = $this->properties[$id]['price'][1 + $this->properties[$idx]['houses']];
-			else if ($this->isMonopoly($idx)) $rent = $this->properties[$id]['price'][1] * 2;
-			else $this->properties[$id]['price'][1];
-		}
-		return $rent;
-	}
-
-	
-	function calcAssets() {
-		$assets = $this->cash;
-		foreach($this->properties as $idx => $property) {
-			if(!isset($property['notprop']) && $property['houses'] > 0) {
-				$assets += $this->houseCost($idx) / 2 * $property['houses'];
-			}
-			$assets += $property['price'] / 2;
-		}
-		return $assets;
-	}
-	function sellAll() {
-		foreach($this->properties as $idx => $property) {
-			if(!isset($property['notprop']) && $property['houses'] > 0) {
-				$this->cash += $this->houseCost($idx) / 2 * $property['houses'];
-				$property['houses'] = 0;
-			}
-		}
-	}
-	function houseCost($idx) {
-		if ($idx < 10) return 50;
-		if ($idx < 20) return 100;
-		if ($idx < 30) return 150;
-		return 200;
-	}
 }
 
 

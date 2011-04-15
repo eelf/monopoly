@@ -8,7 +8,7 @@
 
 class Game extends WSUserManager {
 
-	private $properties;
+	public $properties;
 	private $chance;
 	private $chest;
 	private $turn;
@@ -21,42 +21,68 @@ class Game extends WSUserManager {
 		$this->isStarted = false;
 		$this->autoStart = 0;
 		$this->turnPlayers = array();
+		$this->chance = range(0,15);
+		$this->chest = range(0,15);
+		shuffle($this->chance);
+		shuffle($this->chest);
 
-		$this->properties = array(
-			1=>array('price'=>'60,2,10,30,90,160,250','group'=>array(3)),
-			3=>array('price'=>'60,4,20,60,180,320,450','group'=>array(1)),
-			5=>array('price'=>'200','group'=>array(15,25,35), 'notprop'=>1),
-			6=>array('price'=>'100,6,30,90,270,400,550','group'=>array(8,9)),
-			8=>array('price'=>'100,6,30,90,270,400,550','group'=>array(6,9)),
-			9=>array('price'=>'120,8,40,100,300,450,600','group'=>array(8,6)),
-
-			11=>array('price'=>'140,10,50,150,450,625,750','group'=>array(13,14)),
-			12=>array('price'=>'150','group'=>array(28), 'notprop'=>2),
-			13=>array('price'=>'140,10,50,150,450,625,750','group'=>array(11,14)),
-			14=>array('price'=>'160,12,60,180,500,700,900','group'=>array(11,13)),
-			15=>array('price'=>'200','group'=>array(5,25,35), 'notprop'=>1),
-			16=>array('price'=>'180,14,70,200,550,700,900','group'=>array(18,19)),
-			18=>array('price'=>'180,14,70,200,550,700,950','group'=>array(16,19)),
-			19=>array('price'=>'200,16,80,220,600,800,1000','group'=>array(16,18)),
-
-			21=>array('price'=>'220,18,90,250,700,875,1050','group'=>array(23,24)),
-			23=>array('price'=>'220,18,90,250,700,875,1050','group'=>array(21,24)),
-			24=>array('price'=>'240,20,100,300,750,925,1100','group'=>array(21,23)),
-			25=>array('price'=>'200','group'=>array(15,5,35), 'notprop'=>1),
-			26=>array('price'=>'260,22,110,330,800,975,1150','group'=>array(27,29)),
-			27=>array('price'=>'260,22,110,330,800,975,1150','group'=>array(26,29)),
-			28=>array('price'=>'150','group'=>array(12), 'notprop'=>2),
-			29=>array('price'=>'280,24,120,360,850,1025,1200','group'=>array(26,27)),
-
-			31=>array('price'=>'300,26,130,390,900,1100,1275','group'=>array(32,34)),
-			32=>array('price'=>'300,26,130,390,900,1100,1275','group'=>array(31,34)),
-			34=>array('price'=>'320,28,150,450,1000,1200,1400','group'=>array(31,32)),
-			35=>array('price'=>'200','group'=>array(15,25,5), 'notprop'=>1),
-			37=>array('price'=>'350,35,175,500,1100,1300,1500','group'=>array(39)),
-			39=>array('price'=>'400,50,200,600,1400,1700,2000','group'=>array(37))
-		);
-		foreach($this->properties as $k => $v) 
-			$this->properties[$k]['owner'] = 0;
+		
+//idx, name, class, price, group, rent, monopoly, h1, h2, h3, h4, hotel, housecost
+		$celldata = <<<EOT
+0,GO,go
+1,Mediterranean Avenue,prop,60,1,2,4,10,30,90,160,250,50
+2,Community Chest,cc
+3,Baltic Avenue,prop,60,1,4,8,20,60,180,320,450,50
+4,Income Tax,incometax
+5,Reading Railroad,rail,200,99,50,100,150,200
+6,Oriental Avenue,prop,100,2,6,12,30,90,270,400,550,50
+7,Chance,chance
+8,Vermont Avenue,prop,100,2,6,12,30,90,270,400,550,50
+9,Connecticut Avenue,prop,120,2,8,16,40,100,300,450,600,50
+10,Jail,jail
+11,St. Charles Place,prop,140,11,10,20,50,150,450,625,750,100
+12,Electric Company,util,150,88,4,10
+13,States Avenue,prop,140,11,10,20,50,150,450,625,750,100
+14,Virginia Avenue,prop,160,11,12,24,60,180,500,700,900,100
+15,Pennsylvania Railroad,rail,200,99,50,100,150,200
+16,St. James Place,prop,180,12,14,28,70,200,550,700,900,100
+17,Community Chest,cc
+18,Tennessee Avenue,prop,180,12,14,28,70,200,550,700,950,100
+19,New York Avenue,prop,200,12,16,32,80,220,600,800,1000,100
+20,Free Parking,parking
+21,Kentucky Avenue,prop,220,21,18,36,90,250,700,875,1050,150
+22,Chance,chance
+23,Indiana Avenue,prop,220,21,18,36,90,250,700,875,1050,150
+24,Illinois Avenue,prop,240,21,20,40,100,300,750,925,1100,150
+25,B&O Railroad,rail,200,99,50,100,150,200
+26,Atlantic Avenue,prop,260,22,22,44,110,330,800,975,1150,150
+27,Ventnor Avenue,prop,260,22,22,44,110,330,800,975,1150,150
+28,Water Works,util,150,88,4,10
+29,Marvin Gardens,prop,280,22,24,48,120,360,850,1025,1200,150
+30,Go to jail,gotojail
+31,Pacific Avenue,prop,300,31,26,52,130,390,900,1100,1275,200
+32,North Carolina Avenue,prop,300,31,26,52,130,390,900,1100,1275,200
+33,Community Chest,cc
+34,Pennsylvania Avenue,prop,320,31,28,56,150,450,1000,1200,1400,200
+35,Short Line,rail,200,99,50,100,150,200
+36,Chance,chance
+37,Park Place,prop,350,32,35,70,175,500,1100,1300,1500,200
+38,Luxury Tax,luxurytax
+39,Boardwalk,prop,400,32,50,100,200,600,1400,1700,2000,200
+EOT;
+		foreach(explode("\n", $celldata) as $cellline) {
+			$cell = explode(',', $cellline);
+			if ($cell[2] == 'prop') {
+				$ocell = new Property($this, $cell[0], $cell[1], $cell[2], $cell[3], $cell[4], $cell[5], $cell[6], $cell[7], $cell[8], $cell[9], $cell[10], $cell[11], $cell[12]);
+			} else if ($cell[2] == 'util') {
+				$ocell = new Utility($this, $cell[0], $cell[1], $cell[2], $cell[3], $cell[4], $cell[5], $cell[6]);
+			} else if ($cell[2] == 'rail') {
+				$ocell = new Rail($this, $cell[0], $cell[1], $cell[2], $cell[3], $cell[4], $cell[5], $cell[6], $cell[7], $cell[8]);
+			} else {
+				$ocell = new Cell($this, $cell[0], $cell[1], $cell[2]);
+			}
+			$this->properties [$cell[0]] = $ocell;
+		}
 
 
 	}
@@ -71,19 +97,28 @@ class Game extends WSUserManager {
 	
 	
 	function tick() {
+		parent::tick();
 		//echo "tick {$this->autoStart} " . time() . "\n";
 		if (!$this->isStarted && $this->autoStart != 0 && $this->autoStart < time()) {
 			$this->isStarted = true;
+			// shuffle turnPlayers
 			$turn = current($this->turnPlayers);
-			$this->chat("game started, it is {$turn->name} turn");
+			$this->chat("game started, {$turn->name} turn");
 		}
 		
 	}
 	
 	
 	function message($user, $msg) {
+		parent::message($user, $msg);
 		$msg = json_decode($msg, true);
 		if ($msg == null || !isset($msg['a'])) return;
+
+		if ($user->flood > 20) {
+			$this->chat("{$user->name} kicked due to flood");
+			$this->close($user->sock);
+			return;
+		}
 		
 		
 		$actions = array('rename', 'chat');
@@ -116,45 +151,17 @@ class Game extends WSUserManager {
 			$sum = Dice::roll();
 			$str = Dice::toString();
 			$this->chat("{$user->name} rolled $str");
-			
-			if ($user->jail->rounds) {
-				if (Dice::isDouble()) {
-					$user->jail->doubles = 0;
-					$user->jail->rounds = 0;
-					$user->place += $sum;
-					$this->chat("{$user->name} Rolled double and got out of jail");
-				} else {
-					$user->jail->rounds++;
-				}
+			// turn is not advanced
+			if (!$user->roll()) {
+				return;
+			}
 
-			} else {
-				if (Dice::isDouble()) $user->jail->doubles++;
-				else $user->jail->doubles = 0;
-				if ($user->jail->doubles == 3) {
-					$user->jail->rounds = 1;
-					
-					$user->place = 10;
-					$this->chat("{$user->name} Rolled double three times and going to jail");
-				} else {
-					$user->place += $sum;
-				}
+
+			$next = next($this->turnPlayers);
+			if ($next === false) {
+				$next = reset($this->turnPlayers);
 			}
-			if (array_key_exists($user->place, $this->properties) && 
-				$this->properties[$user->place]['owner'] != 0 && 
-				$this->properties[$user->place]['owner'] != $user &&
-				!$this->properties[$user->place]['mortgaged']) {
-				//$rent = $this->players[$this->properties[$player->place]['owner']]->calcRent($player->place);
-				//$assets = $player->calcAssets();
-				//if ($assets < $rent) {
-					//bankruptcy
-					//$player->sellAll();
-				//}
-			}
-			$player = next($this->turnPlayers);
-			if ($player === false) {
-				$player = reset($this->turnPlayers);
-			}
-			$this->chat("{$player->name} turn");
+			$this->chat("{$next->name} turn");
 			
 			
 		}
@@ -190,7 +197,16 @@ class Game extends WSUserManager {
 		else 
 			$this->reply($user, json_encode($data));
 	}
+	
+	function getCell($idx) {
+		return $this->properties[$idx];
+	}
 
-
+	function everyPayTo($amount, $player) {
+		foreach($this->turnPlayers as $payPlayer) {
+			if ($payPlayer == $player) continue;
+			$payPlayer->pay($amount, $player);
+		}
+	}
 
 }

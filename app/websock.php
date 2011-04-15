@@ -5,11 +5,15 @@ class WSUser {
 	public $ishandshake;
 	public $address;
 	public $port;
+	
+	public $flood;
+	
 	function __construct($sock, $address, $port) {
 		$this->ishandshake = false;
 		$this->sock = $sock;
 		$this->address = $address;
 		$this->port = $port;
+		$this->flood = 0;
 	}
 
 	function keydivnum($key) {
@@ -82,6 +86,7 @@ class WSUserManager {
 				return $user;
 	}
 	function message($user, $data) {
+		$user->flood++;
 		return $data;
 	}
 	function reply($user, $data) {
@@ -91,6 +96,8 @@ class WSUserManager {
 	}
 	
 	function tick() {
+		$user->flood -= 4;
+		if ($user->flood < 0) $user->flood = 0;
 	}
 
 }
