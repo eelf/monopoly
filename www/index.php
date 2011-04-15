@@ -58,6 +58,12 @@ $(function(){
 		var t = {a:'roll'};
 		ws.send(JSON.stringify(t));
 	});
+	$('#buyprop').click(function(e){
+		ws.send(JSON.stringify({a:'buyprop'}));
+	});
+	$('#auc').click(function(e){
+		ws.send(JSON.stringify({a:'auc'}));
+	});
 	$('#rename').click(function(e){
 		var t = {a:'rename', name:$('#a').val()};
 		$('#a').val('');
@@ -74,6 +80,8 @@ $(function(){
 			msg = $.parseJSON(e.data);
 			if (msg.a == 'chat')
 				chat.add("&gt; " + msg.text);
+			if (msg.aa)
+				$('#aa').text(JSON.stringify(msg.aa));
 		}
 		ws.onclose = function() {
 			chat.add("game closed");
@@ -86,10 +94,15 @@ $(function(){
 </script>
 </head>
 <body>
+<!-- inputboxy for chat text, rename name, auction bid -->
 <input type="text" id="a"/>
+<!-- available actions -->
+<div id="aa"></div>
 <input type="button" id="ready" value="ready"/>
 <input type="button" id="roll" value="roll"/>
 <input type="button" id="rename" value="rename"/>
+<input type="button" id="buyprop" value="buyprop"/>
+<input type="button" id="auc" value="auc"/>
 <div id="c"></div>
 </body>
 </html>

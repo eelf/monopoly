@@ -9,14 +9,16 @@
 class Game extends WSUserManager {
 
 	public $properties;
-	private $chance;
-	private $chest;
+	public $chance;
+	public $chest;
 	private $turn;
 	private $isStarted;
 	private $autoStart;
 	private $turnPlayers;
+	public static $i;
 
 	function __construct() {
+		Game::$i = $this;
 		parent::__construct();
 		$this->isStarted = false;
 		$this->autoStart = 0;
@@ -25,6 +27,7 @@ class Game extends WSUserManager {
 		$this->chest = range(0,15);
 		shuffle($this->chance);
 		shuffle($this->chest);
+		
 
 		
 //idx, name, class, price, group, rent, monopoly, h1, h2, h3, h4, hotel, housecost
@@ -71,7 +74,7 @@ class Game extends WSUserManager {
 39,Boardwalk,prop,400,32,50,100,200,600,1400,1700,2000,200
 EOT;
 		foreach(explode("\n", $celldata) as $cellline) {
-			$cell = explode(',', $cellline);
+			$cell = explode(',', trim($cellline));
 			if ($cell[2] == 'prop') {
 				$ocell = new Property($this, $cell[0], $cell[1], $cell[2], $cell[3], $cell[4], $cell[5], $cell[6], $cell[7], $cell[8], $cell[9], $cell[10], $cell[11], $cell[12]);
 			} else if ($cell[2] == 'util') {
@@ -87,12 +90,18 @@ EOT;
 
 	}
 	function add($sock, $address, $port) {
-		$player = new Player($this, $sock, $address, $port);
+		$player = new Player($sock, $address, $port);
 		$player->name = "Player" . (count($this->users) + 1);
 		$this->users []= $player;
 	}
+	function close($sock) {
+		$user = $this->getBySock($sock);
+		$msg = "{$user->name} disconnected";
+		parent::close($sock);
+		$this->chat($msg);
+	}
 	function hsComplete($user) {
-		$this->chat("player connected from {$user->address}:{$user->port}");
+		$this->chat("{$user->name} connected from {$user->address}:{$user->port}");
 	}
 	
 	
@@ -124,8 +133,9 @@ EOT;
 		$actions = array('rename', 'chat');
 		if (!$this->isStarted) $actions []= 'ready';
 		else {
+			$this->checkAbandonedSlot($user);
 			$turn = current($this->turnPlayers);
-			if ($user == $turn)
+			if ($user === $turn)
 				foreach($user->getActions() as $action)
 					$actions []= $action;
 		}
@@ -133,11 +143,17 @@ EOT;
 		
 		if (!in_array($msg['a'], $actions)) {
 			$this->chat("action not available", $user);
+			$data = array('aa' => $actions);
+			$this->reply($user, json_encode($data));
 			return;
 		}
 		
+		/*
+		below are actions possible for this player
+		*/
+		
 		if ($msg['a'] == 'ready') {
-			if (!in_array($user, $this->turnPlayers)) {
+			if (!in_array($user, $this->turnPlayers, true)) {
 				$this->chat("{$user->name} is now ready");
 				$this->turnPlayers []= $user;
 			}
@@ -157,19 +173,46 @@ EOT;
 			}
 
 
-			$next = next($this->turnPlayers);
-			if ($next === false) {
-				$next = reset($this->turnPlayers);
+			$this->nextTurn();
+			
+		}
+		if ($msg['a'] == 'buyprop') {
+			$prop = $this->getCell($user->place);
+			if ($prop->price <= $user->cash) {
+				$prop->owner = $user;
+				$user->cash -= $prop->price;
+				$user->properties []= $prop;
+				$this->chat("{$user->name} bought {$prop->name} for {$prop->price} ({$user->cash} cash left)");
+				$user->canBuyOrAuc = false;
+				if (!Dice::isDouble()) $this->nextTurn();
+			} else {
+				$this->chat("not enough cash ({$prop->price} needed, {$user->cash} avail)", $user);
 			}
-			$this->chat("{$next->name} turn");
-			
-			
 		}
 		if ($msg['a'] == 'rename' && isset($msg['name'])) {
 			$this->rename($user, $msg);
 		}
 		if ($msg['a'] == 'chat' && isset($msg['text']) && strlen($msg['text']) > 1) {
 			$this->chat($user->name . ': ' . htmlspecialchars($msg['text']));
+		}
+	}
+	
+	function nextTurn() {
+		$next = next($this->turnPlayers);
+		if ($next === false) {
+			$next = reset($this->turnPlayers);
+		}
+		$this->chat("{$next->name} turn, he is at {$next->place}");
+	
+	}
+	
+	function checkAbandonedSlot($user) {
+		for($i = 0; $i < count($this->turnPlayers); $i++) {
+			if (!is_resource($this->turnPlayers[$i]->sock)) {
+				$this->turnPlayers[$i] = $user;
+				echo "{$user->address}{$user->port} replaces player $i\n";
+				break;
+			}
 		}
 	}
 	
@@ -207,6 +250,15 @@ EOT;
 			if ($payPlayer == $player) continue;
 			$payPlayer->pay($amount, $player);
 		}
+	}
+	function payEvery($amount, $player) {
+		$result = true;
+		foreach($this->turnPlayers as $payPlayer) {
+			if ($payPlayer == $player) continue;
+			if (!$player->pay($amount, $payPlayer))
+				$result = false;
+		}
+		return true;
 	}
 
 }

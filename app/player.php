@@ -5,24 +5,25 @@ class Player extends WSUser {
 	public $cash;
 	public $place;
 	public $properties;
-	public $jail;
-	public $game;
+	private $jail;
 	public $name;
 	public $debt;
-	public $debtplayer;
+	private $debtplayer;
 	public $canBuyOrAuc;
+	/*
+	chance/chest cards to get out jail for free
+	*/
 	public $chest;
 	public $chance;
 
-	function __construct($game, $sock, $address, $port) {
+	function __construct($sock, $address, $port) {
 		parent::__construct($sock, $address, $port);
-		$this->game = $game;
 		$this->cash = 1500;
 		$this->place = 0;
 		$this->debt = 0;
 		$this->debtplayer = null;
 		$this->properties = array();
-		$this->jail = new Jail();
+		$this->jail = new Jail($this);
 		$this->name = $address . ':' . $port;
 		$this->canBuyOrAuc = false;
 	}
@@ -57,13 +58,13 @@ class Player extends WSUser {
 		if ($this->jail->isInside()) {
 			if ($this->jail->escape()) {
 				$this->place += Dice::sum();
-				$this->game->chat("{$this->name} Rolled double and got out of jail");
+				Game::$i->chat("{$this->name} Rolled double and got out of jail");
 			}
 		} else {
 			if ($this->jail->checkDouble()) {
 				$this->place = 10;
-				$this->game->chat("{$this->name} Rolled double three times and going to jail");
-				return;
+				Game::$i->chat("{$this->name} Rolled double three times and going to jail");
+				return true;
 			} else {
 				$this->place += Dice::sum();
 			}
@@ -71,53 +72,43 @@ class Player extends WSUser {
 		
 		$newplace = $this->place % 40;
 		if ($newplace < $this->place) {
-			$this->advanceGo();
+			$this->actCell(0);
 			$this->place = $newplace;
 		}
 		
-		$cell = $this->game->getCell($this->place);
-		$cell->action($this);
-
+		$actCell = $this->actCell($this->place);
 		
-		return true;
+		return $actCell && !Dice::isDouble();
+	}
+	
+	function actCell($cell = -1) {
+		if ($cell != -1)
+			$this->place = $cell;
+		$cell = Game::$i->getCell($this->place);
+		$cell->action($this);
+			
 	}
 	
 	function advanceGo() {
 		$this->place = 0;
-		$cell = $this->game->getCell($this->place);
+		$cell = Game::$i->getCell($this->place);
 		$cell->action($this);
-	}
-
-	function propertyActions($idx, $property) {
-		$actions = array();
-
-		if (!isset($property['notprop'])) {
-			$max = $min = $this->properties[$idx]['houses'];
-			$owner = $this->properties[$idx]['owner'];
-			foreach($this->properties[$idx]['group'] as $gidx) {
-				if ($this->properties[$gidx]['owner'] != $owner) $owner = 0;
-				if ($this->properties[$gidx]['houses'] > $max) $max = $this->properties[$gidx]['houses'];
-				else if ($this->properties[$gidx]['houses'] < $min) $min = $this->properties[$gidx]['houses'];
-			}
-		}
-		if ($this->properties[$idx]['owner'] == 0) $actions []= 'buy';
-		if (!isset($property['notprop']) && $property['houses'] == $max) $actions []= 'sell';
-		if (!isset($property['notprop']) && $owner == $this->id && $property['houses'] == $min) $actions []= 'house';
-		if (!$property['mortgaged'] && (isset($property['notprop']) || $max == 0)) $actions []= 'mort';
-		if ($property['mortgaged']) $actions []= 'unmort';
-		return $actions;
 	}
 
 	function getActions() {
 		$actions = array();
 		
-		foreach($this->properties as $idx => $property)
-			$actions = array_merge($actions, $this->properyActions($idx, $property, $actions));
+		foreach($this->properties as $property)
+			$actions = array_merge($actions, $property->getActions());
 		
-		if ($this->jail->rounds < 4) $actions []= 'roll';
-		if ($this->jail->rounds > 0 && $this->jail->chance) $actions []= 'chance';
-		if ($this->jail->rounds > 0 && $this->jail->chest) $actions []= 'chest';
-		if ($this->jail->rounds > 0) $actions []= 'jail';
+		if (!$this->jail->isInside() && !$this->canBuyOrAuc && $this->debt == 0) $actions []= 'roll';
+		if ($this->jail->isInside() && $this->jail->chance) $actions []= 'chance';
+		if ($this->jail->isInside() && $this->jail->chest) $actions []= 'chest';
+		if ($this->jail->isInside()) $actions []= 'jail';
+		if ($this->canBuyOrAuc) {
+			$actions []= 'buyprop';
+			$actions []= 'auc';
+		}
 		return $actions;
 	}
 

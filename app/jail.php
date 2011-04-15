@@ -9,17 +9,10 @@ class Jail {
 	rounds spent in jail trying roll double
 	*/
 	public $rounds;
-	/*
-	chance/chest cards to get out jail for free
-	*/
-	public $chance;
-	public $chest;
-	public $player;
+	private $player;
 	function __construct($player) {
 		$this->doubles = 0;
 		$this->rounds = 0;
-		$this->chance = 0;
-		$this->chest = 0;
 		$this->player = $player;
 		
 	}

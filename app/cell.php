@@ -6,7 +6,7 @@ class Cell {
 	public $name;
 	public $class;
 	public $owner;
-	public $morgaged;
+	public $mortgaged;
 	
 	function __construct($game, $idx, $name, $class) {
 		$this->game = $game;
@@ -73,6 +73,93 @@ class Cell {
 		
 	}
 	function chance($player) {
+		$result = true;
+		$chance = array_pop($this->game->chance);
+		switch($chance) {
+		case 0:
+			$player->advanceGo();
+			break;
+		case 1:
+			$player->place = 24;
+			break;
+		case 2:
+			if ($player->place > 11)
+				$player->advanceGo();
+			$player->place = 11;
+			break;
+		case 3:
+			if ($player->place > 5)
+				$player->advanceGo();
+			$player->place = 5;
+			break;
+		case 4:
+			$player->place = 39;
+			break;
+		case 5:
+			if ($player->place >= 1 && $player->place <= 20) {
+				$cell = $this->game->getCell(12);
+			} else {
+				$cell = $this->game->getCell(28);
+			}
+			$player->place = $cell->idx;
+			if (!$cell->mortgaged && $cell->owner != 0 && $cell->owner != $player) {
+				$pay = Dice::roll() * 10;
+				return $player->pay($pay, $owner);
+			} else if ($cell->owner == 0) {
+				return false;
+			}
+			
+			break;
+		case 6:
+			if ($player->place >= 1 && $player->place <= 10) {
+				$cell = $this->game->getCell(5);
+			} else if ($player->place >= 11 && $player->place <= 20) {
+				$cell = $this->game->getCell(15);
+			} else if ($player->place >= 21 && $player->place <= 30) {
+				$cell = $this->game->getCell(25);
+			} else {
+				$cell = $this->game->getCell(35);
+			}
+			$player->place = $cell->idx;
+			if (!$cell->mortgaged && $cell->owner != 0 && $cell->owner != $player) {
+				$pay = $cell->calcRent() * 2;
+				return $player->pay($pay, $owner);
+			} else if ($cell->owner == 0) {
+				return false;
+			}
+			
+			break;
+		case 7:
+			$player->place -= 3;
+			$player->actCell($player->place);
+			break;
+		case 8:
+			$player->place = 10;
+			$player->jail->imprison();
+			break;
+		case 9:
+			$player->chance = 1;
+			$chance = -1;
+			break;
+		case 10:
+			$player->cash += 50;
+			break;
+		case 11:
+			$player->cash += 100;
+			break;
+		case 12:
+			$player->cash += 150;
+			break;
+		case 13:
+			$result = $player->pay(15, 0);
+			break;
+		case 14:
+			$result = $player->payForHouseHotel(25, 100);
+			break;
+		case 15:
+			$result = $this->game->payEvery(50, $player);
+			break;
+		}
 		return true;
 	}
 	
@@ -80,28 +167,38 @@ class Cell {
 		switch($this->class) {
 		case 'go':
 			$player->cash += 200;
+			$this->game->chat("{$player->name} landed/advanced go, collected 200");
 			break;
 		case 'cc':
+			$this->game->chat("{$player->name} enters community chest");
 			return $this->chest($player);
 		case 'chance':
+			$this->game->chat("{$player->name} enters chance");
 			return $this->chance($player);
 		case 'incometax':
+			$this->game->chat("{$player->name} must pay income tax");
 			return $player->pay(200, 0);
 		case 'gotojail':
+			$this->game->chat("{$player->name} goes to jail");
 			$player->place = 10;
 			$player->jail->imprison();
 			break;
 		case 'luxurytax': 
+			$this->game->chat("{$player->name} must pay luxury tax");
 			return $player->pay(100, 0);
 		case 'prop':
 		case 'util':
 		case 'rail':
-			if ($this->owner != 0 && $this->owner != $player && !$this->mortgaged) {
+			if ($this->owner != 0 && $this->owner !== $player && !$this->mortgaged) {
+				$this->game->chat("{$player->name} must pay rent to {$this->owner->name}");
 				$rent = $this->calcRent();
-				return $player->pay($rent, $cell->owner);
-			} else if ($cell->owner == 0) {
+				return $player->pay($rent, $this->owner);
+			} else if ($this->owner == 0) {
+				$this->game->chat("{$player->name} landed on free prop, can buy or auc");
 				$player->canBuyOrAuc = true;
+				return false;
 			}
+		}
 		return true;
 	}
 
@@ -124,6 +221,11 @@ class Rail extends Cell {
 		$this->rent3 = $rent3;
 		$this->rent4 = $rent4;
 	}
+	function getActions() {
+		if ($this->mortgaged) return array('unmort');
+		return array('mort');
+	}
+	
 	function calcRent() {
 		$owned = 0;
 		foreach($this->game->properties as $property) {
@@ -152,6 +254,11 @@ class Utility extends Cell {
 		$this->rent1 = $rent1;
 		$this->rent2 = $rent2;
 	}
+	function getActions() {
+		if ($this->mortgaged) return array('unmort');
+		return array('mort');	
+	}
+	
 	function calcRent() {
 		$owned = 0;
 		foreach($this->game->properties as $property) {
@@ -203,12 +310,32 @@ class Property extends Cell {
 			else return $this->rent;
 		}
 	}
+	function getActions() {
+		if ($this->mortgaged) return array('unmort');
+		$actions = array();
+
+		if ($this->houses == 0)	$actions []= 'mort';
+		$mono = $this->isMonopoly();
+		$max = $this->maxHouses();
+		if ($mono && $this->houses <= $max && $this->houses < 5) $actions []= 'buy';
+		else if ($mono && $this->houses > 0 && $this->houses == $max) $actions [] = 'sell';
+		return $actions;
+	}
 	function isMonopoly() {
 		foreach($this->game->properties as $property) {
-			if ($property->class == 'prop' && $property->group == $this->group && $property != $this && $property->owner != $this->owner)
+			if ($property->class == 'prop' && $property->group == $this->group && $property != $this && $property->owner !== $this->owner)
 				return false;
 		}
 		return true;
+	}
+	function maxHouses() {
+		$max = 0;
+		foreach($this->game->properties as $property) {
+			if ($property->class == 'prop' && $property->group == $this->group && $property != $this && 
+				$property->owner !== $this->owner && $property->houses > $max)
+				$max = $property->houses;
+		}
+		return $max;
 	}
 
 }
