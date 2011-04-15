@@ -5,7 +5,7 @@
 <head>
 <title>Game</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="scripts/jquery-1.4.2.min.js"></script>
 <!--script type="text/javascript" src="js/jquery-jtemplates_uncompressed.js"></script-->
 
 <script type="text/javascript">
