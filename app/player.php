@@ -85,8 +85,7 @@ class Player extends WSUser {
 		if ($cell != -1)
 			$this->place = $cell;
 		$cell = Game::$i->getCell($this->place);
-		$cell->action($this);
-			
+		return $cell->action($this);
 	}
 	
 	function advanceGo() {
@@ -102,8 +101,8 @@ class Player extends WSUser {
 			$actions = array_merge($actions, $property->getActions());
 		
 		if (!$this->jail->isInside() && !$this->canBuyOrAuc && $this->debt == 0) $actions []= 'roll';
-		if ($this->jail->isInside() && $this->jail->chance) $actions []= 'chance';
-		if ($this->jail->isInside() && $this->jail->chest) $actions []= 'chest';
+		if ($this->jail->isInside() && $this->chance) $actions []= 'chance';
+		if ($this->jail->isInside() && $this->chest) $actions []= 'chest';
 		if ($this->jail->isInside()) $actions []= 'jail';
 		if ($this->canBuyOrAuc) {
 			$actions []= 'buyprop';

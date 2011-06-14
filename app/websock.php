@@ -68,8 +68,10 @@ class WSUserManager {
 	}
 	function fillSelect(&$select) {
 		//var_dump($this->users);
-		foreach($this->users as $user)
-			$select []= $user->sock;
+		foreach($this->users as $user) {
+			if ($user->sock != null)
+				$select []= $user->sock;
+		}
 	}
 	function close($sock) {
 		$idx = $this->getIdxBySock($sock);

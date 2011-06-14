@@ -90,6 +90,7 @@ EOT;
 
 	}
 	function add($sock, $address, $port) {
+		$this->isAwaitingPlayer($sock);
 		$player = new Player($sock, $address, $port);
 		$player->name = "Player" . (count($this->users) + 1);
 		$this->users []= $player;
@@ -97,7 +98,8 @@ EOT;
 	function close($sock) {
 		$user = $this->getBySock($sock);
 		$msg = "{$user->name} disconnected";
-		parent::close($sock);
+		$user->sock = null;
+		//parent::close($sock);
 		$this->chat($msg);
 	}
 	function hsComplete($user) {
@@ -131,9 +133,10 @@ EOT;
 		
 		
 		$actions = array('rename', 'chat');
-		if (!$this->isStarted) $actions []= 'ready';
-		else {
-			$this->checkAbandonedSlot($user);
+		$awaiting = $this->isAwaitingPlayer();
+		if (!$this->isStarted || ($awaiting && !in_array($user, $this->turnPlayers, true))) {
+			$actions []= 'ready';
+		} else {
 			$turn = current($this->turnPlayers);
 			if ($user === $turn)
 				foreach($user->getActions() as $action)
@@ -153,6 +156,10 @@ EOT;
 		*/
 		
 		if ($msg['a'] == 'ready') {
+			if ($awaiting) {
+				$this->isAwaitingPlayer($user->sock);
+				return;
+			}
 			if (!in_array($user, $this->turnPlayers, true)) {
 				$this->chat("{$user->name} is now ready");
 				$this->turnPlayers []= $user;
@@ -202,18 +209,22 @@ EOT;
 		if ($next === false) {
 			$next = reset($this->turnPlayers);
 		}
-		$this->chat("{$next->name} turn, he is at {$next->place}");
+		$this->chat("{$next->name} turn, he is at {$next->place} {$this->properties[$next->place]->name}");
 	
 	}
 	
-	function checkAbandonedSlot($user) {
+	function isAwaitingPlayer($sock = null) {
 		for($i = 0; $i < count($this->turnPlayers); $i++) {
-			if (!is_resource($this->turnPlayers[$i]->sock)) {
-				$this->turnPlayers[$i] = $user;
-				echo "{$user->address}{$user->port} replaces player $i\n";
-				break;
+			//if (!is_resource($this->turnPlayers[$i]->sock)) {
+			if ($this->turnPlayers[$i]->sock == null) {
+				if ($sock != null) {
+					$this->turnPlayers[$i]->sock = $sock;
+					$this->chat("{$sock} replaces player $i");
+				}
+				return true;
 			}
 		}
+		return false;
 	}
 	
 	function rename($user, $msg) {
@@ -233,12 +244,14 @@ EOT;
 	
 	function chat($text, $user = null) {
 		$data = array('a'=>'chat', 'text'=>$text);
-		if ($user == null)
+		if ($user == null) {
 			foreach($this->users as $user) {
-				$this->reply($user, json_encode($data));
+				if ($user->sock != null)
+					$this->reply($user, json_encode($data));
 			}
-		else 
+		} else if ($user->sock != null) {
 			$this->reply($user, json_encode($data));
+		}
 	}
 	
 	function getCell($idx) {

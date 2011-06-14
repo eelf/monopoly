@@ -14,7 +14,7 @@ class Cell {
 		$this->name = $name;
 		$this->class = $class;
 		$this->owner = 0;
-		$this->morgaged = false;
+		$this->mortgaged = false;
 	}
 	
 	function chest($player) {
@@ -23,32 +23,41 @@ class Cell {
 		switch ($chest) {
 		case 0:
 			$player->cash += 10;
+			$this->game->chat("{$player->name} cash +10");
 			break;
 		case 1:
 			$player->cash += 20;
+			$this->game->chat("{$player->name} cash +20");
 			break;
 		case 2:
 			$player->cash += 25;
+			$this->game->chat("{$player->name} cash +25");
 			break;
 		case 3:
 			$player->cash += 45;
+			$this->game->chat("{$player->name} cash +45");
 			break;
 		case 4:
 		case 5:
 		case 6:
 			$player->cash += 100;
+			$this->game->chat("{$player->name} cash +100");
 			break;
 		case 7:
 			$player->cash += 200;
+			$this->game->chat("{$player->name} cash +200");
 			break;
 		case 8:
 			$result = $player->pay(50, 0);
+			$this->game->chat("{$player->name} cash -50");
 			break;
 		case 9:
 			$result = $player->pay(100, 0);
+			$this->game->chat("{$player->name} cash -100");
 			break;
 		case 10:
 			$result = $player->pay(150, 0);
+			$this->game->chat("{$player->name} cash -150");
 			break;
 		case 11:
 			$player->advanceGo();
@@ -56,16 +65,20 @@ class Cell {
 		case 12:
 			$player->place = 10;
 			$player->jail->imprison();
+			$this->game->chat("{$player->name} imprisoned");
 			break;
 		case 13:
 			$player->chest = 1;
 			$chest = -1;
+			$this->game->chat("{$player->name} GetOutFreeJail chest");
 			break;
 		case 14:
 			$this->game->everyPayTo(50, $player);
+			$this->game->chat("{$player->name} every pay 50");
 			break;
 		case 15:
 			$result = $player->payForHouseHotel(40, 115);
+			$this->game->chat("{$player->name} pays for house hotels");
 			break;
 		}
 		if ($chest != -1) array_unshift($this->game->chest, $chest);
@@ -81,19 +94,23 @@ class Cell {
 			break;
 		case 1:
 			$player->place = 24;
+			$this->game->chat("{$player->name} moved to 24");
 			break;
 		case 2:
 			if ($player->place > 11)
 				$player->advanceGo();
 			$player->place = 11;
+			$this->game->chat("{$player->name} moved to 11");
 			break;
 		case 3:
 			if ($player->place > 5)
 				$player->advanceGo();
 			$player->place = 5;
+			$this->game->chat("{$player->name} moved to 5");
 			break;
 		case 4:
 			$player->place = 39;
+			$this->game->chat("{$player->name} moved to 39");
 			break;
 		case 5:
 			if ($player->place >= 1 && $player->place <= 20) {
@@ -108,6 +125,7 @@ class Cell {
 			} else if ($cell->owner == 0) {
 				return false;
 			}
+			$this->game->chat("{$player->name} moved to 12/28");
 			
 			break;
 		case 6:
@@ -127,37 +145,46 @@ class Cell {
 			} else if ($cell->owner == 0) {
 				return false;
 			}
-			
+			$this->game->chat("{$player->name} moved to 5/15/25/35");
 			break;
 		case 7:
 			$player->place -= 3;
 			$player->actCell($player->place);
+			$this->game->chat("{$player->name} moved -3");
 			break;
 		case 8:
 			$player->place = 10;
 			$player->jail->imprison();
+			$this->game->chat("{$player->name} imprisoned");
 			break;
 		case 9:
 			$player->chance = 1;
 			$chance = -1;
+			$this->game->chat("{$player->name} GetOutFreeJail chance");
 			break;
 		case 10:
 			$player->cash += 50;
+			$this->game->chat("{$player->name} cash +50");
 			break;
 		case 11:
 			$player->cash += 100;
+			$this->game->chat("{$player->name} cash +100");
 			break;
 		case 12:
 			$player->cash += 150;
+			$this->game->chat("{$player->name} cash +150");
 			break;
 		case 13:
 			$result = $player->pay(15, 0);
+			$this->game->chat("{$player->name} cash -15");
 			break;
 		case 14:
 			$result = $player->payForHouseHotel(25, 100);
+			$this->game->chat("{$player->name} pays for house hotels");
 			break;
 		case 15:
 			$result = $this->game->payEvery(50, $player);
+			$this->game->chat("{$player->name} pays every other player 50");
 			break;
 		}
 		return true;

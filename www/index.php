@@ -1,6 +1,6 @@
 <?php
 	$remote = $_SERVER['REMOTE_ADDR'];
-	$server = ($remote == '192.168.88.33') ? '192.168.88.33' : 'ezh.mine.nu';
+	$server = ($remote == '192.168.88.33' || $remote == '127.0.0.1') ? '192.168.88.33' : 'mp.ezh.mine.nu';
 ?><html>
 <head>
 <title>Game</title>
@@ -10,7 +10,8 @@
 
 <script type="text/javascript">
 // implement JSON.stringify serialization
-JSON = {};
+/*
+if (typeof(JSON) != 'object') JSON = {};
 JSON.stringify = JSON.stringify || function (obj) {
     var t = typeof (obj);
     if (t != "object" || obj === null) {
@@ -31,13 +32,13 @@ JSON.stringify = JSON.stringify || function (obj) {
         return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
     }
 };
-
+*/
 $(function(){
 	chat = {};
 	chat.add = function(str) {
 		//$('#c').html(str + '<br>' + $('#c').html());
 		$('#c').prepend('<div>' + str + '</div>');
-		$('#c').html($('#c > div').slice(0, 15));		
+		$('#c').html($('#c > div').slice(0, 55));		
 	};
 	chat.send = function(text) {
 		var t = {a:'chat', 'text':text};
@@ -70,7 +71,7 @@ $(function(){
 		ws.send(JSON.stringify(t));
 	});
 	if ("WebSocket" in window) {
-		var ws = new WebSocket("ws://<?= $server; ?>:8001/");
+		var ws = new WebSocket("ws://<?php echo $server; ?>:8001/");
 		ws.onopen = function() {
 			chat.add("game opened");
 			//var t = {a:'helo'};
@@ -83,11 +84,18 @@ $(function(){
 			if (msg.aa)
 				$('#aa').text(JSON.stringify(msg.aa));
 		}
+		ws.onerror = function() {
+			chat.add('onerror triggered');
+		}
 		ws.onclose = function() {
 			chat.add("game closed");
+			
 		}
 	} else {
-		alert("No WebSockets support");
+		$("#aa").text("<p>No WebSockets support</p>");
+		if (opera) {
+			$("#aa").append("<p><a href=\"opera:config#UserPrefs|EnableWebSockets\">opera:config#UserPrefs|EnableWebSockets</a></p>");
+		}
 	}
 
 });
