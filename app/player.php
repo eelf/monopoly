@@ -101,9 +101,9 @@ class Player extends WSUser {
 			$actions = array_merge($actions, $property->getActions());
 		
 		if (!$this->jail->isInside() && !$this->canBuyOrAuc && $this->debt == 0) $actions []= 'roll';
-		if ($this->jail->isInside() && $this->chance) $actions []= 'chance';
-		if ($this->jail->isInside() && $this->chest) $actions []= 'chest';
-		if ($this->jail->isInside()) $actions []= 'jail';
+		if ($this->jail->isInside() && $this->chance && $this->debt == 0) $actions []= 'chance';
+		if ($this->jail->isInside() && $this->chest && $this->debt == 0) $actions []= 'chest';
+		if ($this->jail->isInside() && $this->debt == 0) $actions []= 'jail';
 		if ($this->canBuyOrAuc) {
 			$actions []= 'buyprop';
 			$actions []= 'auc';

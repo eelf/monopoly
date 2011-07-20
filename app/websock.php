@@ -66,8 +66,7 @@ class WSUserManager {
 	function add($sock, $address, $port) {
 		$this->users []= new WSUser($sock, $address, $port);
 	}
-	function fillSelect(&$select) {
-		//var_dump($this->users);
+	function getSocks(&$select) {
 		foreach($this->users as $user) {
 			if ($user->sock != null)
 				$select []= $user->sock;
@@ -87,19 +86,33 @@ class WSUserManager {
 			if ($user->sock == $sock)
 				return $user;
 	}
+	function data($sock, $data) {
+		$user = $this->getBySock($sock);
+		if ($user->ishandshake) {
+			$data = substr($data, 1, -1);
+			$reply = $this->message($user, $data);
+			if ($reply)
+				$this->reply($user, $reply);
+		} else {
+			$this->server->send($user->sock, $user->handshake($data));
+			$this->hsComplete($user);
+		}
+	}
 	function message($user, $data) {
 		$user->flood++;
 		return $data;
 	}
 	function reply($user, $data) {
-		$this->server->send($user, $data);
+		$this->server->send($user->sock, chr(0) . $data . chr(255));
 	}
 	function hsComplete($user) {
 	}
 	
 	function tick() {
-		$user->flood -= 4;
-		if ($user->flood < 0) $user->flood = 0;
+		foreach($this->users as $user){
+			$user->flood -= 4;
+			if ($user->flood < 0) $user->flood = 0;
+		}
 	}
 
 }
@@ -120,7 +133,7 @@ class WebSockServer {
 		$tick = time();
 		while (true) {
 			$socks = array($server);
-			$um->fillSelect($socks);
+			$um->getSocks($socks);
 			
 			$socksempty = null;
 			$select = socket_select($socks, $socksempty, $socksempty, 5);
@@ -137,20 +150,15 @@ class WebSockServer {
 					echo "client connected $address:$port\n";
 
 				} else {
-					$user = $um->getBySock($sock);
 					$data = socket_read($sock, 1024);
 					if (!$data) {
-						echo "client disconnected {$user->address}:{$user->port}\n";
+						$address = $port = '';
+						socket_getpeername($sock, $address, $port);
+						echo "client disconnected {$address}:{$port}\n";
 						$um->close($sock);
 						socket_close($sock);
-					} else if ($user->ishandshake) {
-						$data = substr($data, 1, -1);
-						$reply = $um->message($user, $data);
-						if ($reply)
-							socket_write($user->sock,  chr(0) . $reply . chr(255));
 					} else {
-						socket_write($user->sock, $user->handshake($data));
-						$um->hsComplete($user);
+						$um->data($sock, $data);
 					}
 					
 				}
@@ -162,9 +170,12 @@ class WebSockServer {
 			}
 			
 			
-		}	
+		}
 	}
-	function send($user, $data) {
-		socket_write($user->sock,  chr(0) . $data . chr(255));
+	function close($sock) {
+		socket_close($sock);
+	}
+	function send($sock, $data) {
+		socket_write($sock,  $data);
 	}
 }

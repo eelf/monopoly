@@ -8,17 +8,15 @@
 
 class Game extends WSUserManager {
 
-	public $properties;
-	public $chance;
-	public $chest;
+	private $properties;
+	private $chance;
+	private $chest;
 	private $turn;
 	private $isStarted;
 	private $autoStart;
 	private $turnPlayers;
-	public static $i;
 
 	function __construct() {
-		Game::$i = $this;
 		parent::__construct();
 		$this->isStarted = false;
 		$this->autoStart = 0;
@@ -90,7 +88,7 @@ EOT;
 
 	}
 	function add($sock, $address, $port) {
-		$this->isAwaitingPlayer($sock);
+		if ($this->isAwaitingPlayer($sock)) return;
 		$player = new Player($sock, $address, $port);
 		$player->name = "Player" . (count($this->users) + 1);
 		$this->users []= $player;
@@ -98,8 +96,10 @@ EOT;
 	function close($sock) {
 		$user = $this->getBySock($sock);
 		$msg = "{$user->name} disconnected";
-		$user->sock = null;
-		//parent::close($sock);
+		if (in_array($user, $this->turnPlayers, true))
+			$user->sock = null;
+		else
+			parent::close($sock);
 		$this->chat($msg);
 	}
 	function hsComplete($user) {
@@ -112,7 +112,7 @@ EOT;
 		//echo "tick {$this->autoStart} " . time() . "\n";
 		if (!$this->isStarted && $this->autoStart != 0 && $this->autoStart < time()) {
 			$this->isStarted = true;
-			// shuffle turnPlayers
+			shuffle($this->turnPlayers);
 			$turn = current($this->turnPlayers);
 			$this->chat("game started, {$turn->name} turn");
 		}
@@ -127,14 +127,14 @@ EOT;
 
 		if ($user->flood > 20) {
 			$this->chat("{$user->name} kicked due to flood");
+			if ($this->isIngame($user)) 
 			$this->close($user->sock);
 			return;
 		}
 		
 		
 		$actions = array('rename', 'chat');
-		$awaiting = $this->isAwaitingPlayer();
-		if (!$this->isStarted || ($awaiting && !in_array($user, $this->turnPlayers, true))) {
+		if (!$this->isStarted || ($this->isAwaitingPlayer() && !$this->isIngame($user))) {
 			$actions []= 'ready';
 		} else {
 			$turn = current($this->turnPlayers);
@@ -146,8 +146,7 @@ EOT;
 		
 		if (!in_array($msg['a'], $actions)) {
 			$this->chat("action not available", $user);
-			$data = array('aa' => $actions);
-			$this->reply($user, json_encode($data));
+			$this->reply($user, json_encode(array('aa' => $actions)));
 			return;
 		}
 		
@@ -156,11 +155,9 @@ EOT;
 		*/
 		
 		if ($msg['a'] == 'ready') {
-			if ($awaiting) {
-				$this->isAwaitingPlayer($user->sock);
+			if ($this->isAwaitingPlayer($user->sock))
 				return;
-			}
-			if (!in_array($user, $this->turnPlayers, true)) {
+			if (!$this->isIngame($user)) {
 				$this->chat("{$user->name} is now ready");
 				$this->turnPlayers []= $user;
 			}
@@ -204,6 +201,10 @@ EOT;
 		}
 	}
 	
+	function isIngame($user) {
+		return in_array($user, $this->turnPlayers, true);
+	}
+	
 	function nextTurn() {
 		$next = next($this->turnPlayers);
 		if ($next === false) {
@@ -218,8 +219,11 @@ EOT;
 			//if (!is_resource($this->turnPlayers[$i]->sock)) {
 			if ($this->turnPlayers[$i]->sock == null) {
 				if ($sock != null) {
+					$idx = $this->getIdxBySock($sock);
+					unset($this->users[$idx]);
 					$this->turnPlayers[$i]->sock = $sock;
 					$this->chat("{$sock} replaces player $i");
+					
 				}
 				return true;
 			}
