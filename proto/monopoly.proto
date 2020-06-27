@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+enum Cell {
+    Unk = 0;
+    Go = 1;
+    Second = 2;
+    Third = 3;
+}
+
+message SubsRequest {
+}
+
+message SubsRespStream {
+    message PlayerLoc {
+        uint32 id = 1;
+        Cell cell = 2;
+        string name = 3;
+    }
+    repeated PlayerLoc locs = 1;
+    repeated string chat = 2;
+    message Popup {
+        enum Type {
+            Unk = 0;
+            Trade = 1;
+        }
+        Type type = 1;
+    }
+    Popup popup = 3;
+}
+
+message RollDiceRequest {
+}
+
+message RollDiceResponse {
+    repeated uint32 die = 1;
+}
+
+message ChatRequest {
+    string line = 1;
+}
+message ChatResponse {
+}
+
+service Monopoly {
+    rpc Subs(SubsRequest) returns (stream SubsRespStream);
+
+    rpc RollDice(RollDiceRequest) returns (RollDiceResponse);
+    rpc Chat(ChatRequest) returns (ChatResponse);
+}
