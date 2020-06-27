@@ -10,11 +10,12 @@ import (
 	monopoly "kek/server"
 	"log"
 	"net"
+	"sync"
 )
 
 type state uint32
 const (
-	Idle state = iota
+	Waiting state = iota
 	Rolling
 	Trading
 )
@@ -24,11 +25,12 @@ type user struct {
 	name string
 	st state
 	trading string
-	streams []monopoly.Monopoly_SubsServer
+	streams sync.Map//monopoly.Monopoly_SubsServer
 }
 
 type game struct {
 	users map[string]*user
+	turn string //which user's turn
 	//chat []string
 	locs map[uint32]uint32
 }
@@ -56,10 +58,11 @@ func (m *MyMonopolyServer) Chat(ctx context.Context, req *monopoly.ChatRequest) 
 	resp := &monopoly.SubsRespStream{Chat: []string{user.name + ": " + req.GetLine()}}
 
 	for _, u := range game.users {
-		for _, s := range u.streams {
-			err := s.Send(resp)
+		u.streams.Range(func(key, value interface{}) bool {
+			err := value.(monopoly.Monopoly_SubsServer).Send(resp)
 			log.Println("send chat", err)
-		}
+			return true
+		})
 	}
 
 	return &monopoly.ChatResponse{}, nil
@@ -95,12 +98,14 @@ func (m *MyMonopolyServer) Subs(req *monopoly.SubsRequest, oStr monopoly.Monopol
 
 	log.Println("Subs ctx", ctx)
 
-	if p, ok := peer.FromContext(ctx); ok {
-		log.Println("peerKey", p)
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return fmt.Errorf("could not get peer from context")
 	}
+	log.Println("peerKey", p)
 
-	sts := grpc.ServerTransportStreamFromContext(ctx)
-	log.Println(sts.Method())
+	//sts := grpc.ServerTransportStreamFromContext(ctx)
+	//log.Println(sts.Method())
 
 	if userId, gameId, err = authorize(ctx); err != nil {
 		return err
@@ -115,12 +120,33 @@ func (m *MyMonopolyServer) Subs(req *monopoly.SubsRequest, oStr monopoly.Monopol
 		return fmt.Errorf("no such user")
 	}
 
+	resp := &monopoly.SubsRespStream{Chat: []string{user.name + ": connected"}}
 
-	user.streams = append(user.streams, oStr)
+	for _, u := range game.users {
+		u.streams.Range(func(key, value interface{}) bool {
+			err := value.(monopoly.Monopoly_SubsServer).Send(resp)
+			log.Println("Subs before waiting, connect broadcast", err)
+			return true
+		})
+	}
+
+
+	user.streams.Store(p.Addr, oStr)
 
 	log.Println("Subs streaming call: waiting ctx.Done")
 	<- ctx.Done()
 	log.Println("Subs streaming call: waited ctx.Done")
+
+	user.streams.Delete(p.Addr)
+
+	resp = &monopoly.SubsRespStream{Chat: []string{user.name + ": disconnected"}}
+	for _, u := range game.users {
+		u.streams.Range(func(key, value interface{}) bool {
+			err := value.(monopoly.Monopoly_SubsServer).Send(resp)
+			log.Println("Subs done, disconnect broadcast", err)
+			return true
+		})
+	}
 
 	return nil
 }
@@ -136,14 +162,20 @@ func main() {
 
 	m := &MyMonopolyServer{}
 	m.games = make(map[string]*game)
-	m.games["123"] = &game{locs:  nil, users: make(map[string]*user)}
-	m.games["123"].users["456"] = &user{
+
+	user1 := &user{
 		pubId:   1488,
-		name:    "Kek",
-		st:      0,
-		trading: "",
-		streams: make([]monopoly.Monopoly_SubsServer, 0),
+		name:    "Crash Override",
 	}
+
+	user2 := &user{
+		pubId:   1489,
+		name:    "Acid Burn",
+	}
+
+	m.games["123"] = &game{locs:  nil, users: make(map[string]*user)}
+	m.games["123"].users["456"] = user1
+	m.games["123"].users["457"] = user2
 
 	monopoly.RegisterMonopolyServer(s, m)
 

@@ -2,9 +2,50 @@ syntax = "proto3";
 
 enum Cell {
     Unk = 0;
+
     Go = 1;
-    Second = 2;
-    Third = 3;
+    M11 = 2;
+    Cc1 = 3;
+    M12 = 4;
+    IncTax = 5;
+    Quadro1 = 6;
+    M21 = 7;
+    Ch1 = 8;
+    M22 = 9;
+    M23 = 10;
+
+    Jail = 11;
+    M31 = 12;
+    Duo1 = 13;
+    M32 = 14;
+    M33 = 15;
+    Quadro2 = 16;
+    M41 = 17;
+    Cc2 = 18;
+    M42 = 19;
+    M43 = 20;
+
+    Free = 21;
+    M51 = 22;
+    Ch2 = 23;
+    M52 = 24;
+    M53 = 25;
+    Quadro3 = 26;
+    M61 = 27;
+    M62 = 28;
+    Duo2 = 29;
+    M63 = 30;
+
+    GoJail = 31;
+    M71 = 32;
+    M72 = 33;
+    Cc3 = 34;
+    M73 = 35;
+    Quadro4 = 36;
+    Ch3 = 37;
+    M81 = 38;
+    LuxTax = 39;
+    M82 = 40;
 }
 
 message SubsRequest {

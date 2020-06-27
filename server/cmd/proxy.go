@@ -66,12 +66,12 @@ func jsWebsocketProxy(dir, addr, svcAddr string) {
 				log.Println("wrote", nw, ew, m.data, by)
 
 				if ew != nil {
-					log.Println("ws write", ew)
+					log.Println("ws write err", ew)
 					//todo propagate that s2c writer finishes
 					return
 				}
 				if len(by) != nw {
-					log.Println("ws write", io.ErrShortWrite)
+					log.Println("ws write len", io.ErrShortWrite)
 					//todo propagate that s2c writer finishes
 					return
 				}
@@ -109,10 +109,11 @@ func processWsMsg(c2s, s2c chan jsMsg, ctx context.Context, client monopoly.Mono
 	//, meth string, arg []byte
 	//string, []byte
 	var wg sync.WaitGroup
+	var c2sopen bool
+	var m jsMsg
 	for {
-		//todo determine ending condition
-		m, ok := <-c2s
-		if !ok {
+		m, c2sopen = <-c2s
+		if !c2sopen {
 			log.Println("processWsMsg c2s closed - waiting stream recvers")
 			wg.Wait()
 			log.Println("processWsMsg c2s closed - closing s2c")
@@ -137,14 +138,20 @@ func processWsMsg(c2s, s2c chan jsMsg, ctx context.Context, client monopoly.Mono
 				continue
 			}
 			wg.Add(1)
-			go func (resp monopoly.Monopoly_SubsClient) {
+			go func (reqId string, resp monopoly.Monopoly_SubsClient) {
 				defer wg.Done()
 				for {
 					msg, err := resp.Recv()
+
+					if !c2sopen {
+						// service has closed connection due to client disconnected first
+						break
+					}
+
 					if err != nil {
 						err := fmt.Errorf("could not recv: %w", err).Error()
 						log.Println(err)
-						s2c <- jsMsg{m.reqId, "err", []byte(err)}
+						s2c <- jsMsg{reqId, "err", []byte(err)}
 						break
 					}
 
@@ -153,12 +160,12 @@ func processWsMsg(c2s, s2c chan jsMsg, ctx context.Context, client monopoly.Mono
 					if err != nil {
 						err := fmt.Errorf("could not marshal streaming: %w", err).Error()
 						log.Println(err)
-						s2c <- jsMsg{m.reqId, "err", []byte(err)}
+						s2c <- jsMsg{reqId, "err", []byte(err)}
 						break
 					}
-					s2c <- jsMsg{m.reqId, "ok", by}
+					s2c <- jsMsg{reqId, "ok", by}
 				}
-			}(resp)
+			}(m.reqId, resp)
 		} else if m.meth == "Chat" {
 			req := &monopoly.ChatRequest{}
 			err := proto.Unmarshal(m.data, req)

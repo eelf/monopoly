@@ -1,0 +1,12 @@
+build/monopoly
+build/protoc-gen-gogo
+client/.npmrc
+client/monopoly_pb.js
+client/node_modules/
+client/package.json
+client/webpack.config.js
+client/yarn.lock
+go.sum
+server/monopoly.pb.go
+web/main.js
+
