@@ -1,5 +1,4 @@
-build/monopoly
-build/protoc-gen-gogo
+build/
 client/.npmrc
 client/monopoly_pb.js
 client/node_modules/
