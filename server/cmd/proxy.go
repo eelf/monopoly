@@ -12,6 +12,7 @@ import (
 	monopoly "kek/server"
 	"log"
 	"net/http"
+	"reflect"
 	"sync"
 )
 
@@ -120,6 +121,11 @@ func processWsMsg(c2s, s2c chan jsMsg, ctx context.Context, client monopoly.Mono
 			close(s2c)
 			break
 		}
+
+		meth, ok := reflect.TypeOf(client).MethodByName(m.meth)
+		log.Println(meth, ok)
+
+
 		if m.meth == "Subs" {
 			req := &monopoly.SubsRequest{}
 			err := proto.Unmarshal(m.data, req)

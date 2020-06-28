@@ -20,8 +20,11 @@ const (
 	Trading
 )
 
+type userIdPri string
+type userIdPub uint32
+
 type user struct {
-	pubId uint32
+	pubId userIdPub
 	name string
 	st state
 	trading string
@@ -29,10 +32,11 @@ type user struct {
 }
 
 type game struct {
-	users map[string]*user
-	turn string //which user's turn
+	lock sync.Mutex
+	users map[userIdPri]*user
+	turn userIdPri //which user's turn
 	//chat []string
-	locs map[uint32]uint32
+	locs map[userIdPri]monopoly.Cell
 }
 
 type MyMonopolyServer struct {
@@ -40,7 +44,8 @@ type MyMonopolyServer struct {
 }
 
 func (m *MyMonopolyServer) Chat(ctx context.Context, req *monopoly.ChatRequest) (*monopoly.ChatResponse, error) {
-	var userId, gameId string
+	var userId userIdPri
+	var gameId string
 	var err error
 	if userId, gameId, err = authorize(ctx); err != nil {
 		return nil, err
@@ -68,7 +73,7 @@ func (m *MyMonopolyServer) Chat(ctx context.Context, req *monopoly.ChatRequest) 
 	return &monopoly.ChatResponse{}, nil
 }
 
-func authorize(ctx context.Context) (userId, gameId string, err error) {
+func authorize(ctx context.Context) (userId userIdPri, gameId string, err error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		err = fmt.Errorf("no md")
@@ -79,7 +84,7 @@ func authorize(ctx context.Context) (userId, gameId string, err error) {
 		err = fmt.Errorf("user_id wrong len")
 		return
 	}
-	userId = userIds[0]
+	userId = userIdPri(userIds[0])
 
 	gameIds := md.Get("game_id")
 	if len(gameIds) != 1 {
@@ -92,7 +97,8 @@ func authorize(ctx context.Context) (userId, gameId string, err error) {
 }
 
 func (m *MyMonopolyServer) Subs(req *monopoly.SubsRequest, oStr monopoly.Monopoly_SubsServer) error {
-	var userId, gameId string
+	var userId userIdPri
+	var gameId string
 	var err error
 	ctx := oStr.Context()
 
@@ -133,6 +139,25 @@ func (m *MyMonopolyServer) Subs(req *monopoly.SubsRequest, oStr monopoly.Monopol
 
 	user.streams.Store(p.Addr, oStr)
 
+	game.lock.Lock()
+	var playersLoc []*monopoly.SubsRespStream_PlayerLoc
+	for upri, loc := range game.locs {
+		playersLoc = append(playersLoc, &monopoly.SubsRespStream_PlayerLoc{
+			Id:                   uint32(game.users[upri].pubId),
+			Cell:                 loc,
+			Name:                 game.users[upri].name,
+		})
+	}
+	resp = &monopoly.SubsRespStream{
+		Locs: playersLoc,
+		Turn: uint32(game.users[game.turn].pubId),}
+	err = oStr.Send(resp)
+	if err != nil {
+		log.Println("send gamesstate", err)
+		return err
+	}
+	game.lock.Unlock()
+
 	log.Println("Subs streaming call: waiting ctx.Done")
 	<- ctx.Done()
 	log.Println("Subs streaming call: waited ctx.Done")
@@ -163,19 +188,24 @@ func main() {
 	m := &MyMonopolyServer{}
 	m.games = make(map[string]*game)
 
+	user1pri := userIdPri("456")
 	user1 := &user{
 		pubId:   1488,
 		name:    "Crash Override",
 	}
 
+	user2pri := userIdPri("457")
 	user2 := &user{
 		pubId:   1489,
 		name:    "Acid Burn",
 	}
 
-	m.games["123"] = &game{locs:  nil, users: make(map[string]*user)}
-	m.games["123"].users["456"] = user1
-	m.games["123"].users["457"] = user2
+	m.games["123"] = &game{locs:  make(map[userIdPri]monopoly.Cell), users: make(map[userIdPri]*user)}
+	m.games["123"].locs[user1pri] = monopoly.Cell_Go
+	m.games["123"].locs[user2pri] = monopoly.Cell_Go
+	m.games["123"].users[user1pri] = user1
+	m.games["123"].users[user2pri] = user2
+	m.games["123"].turn = user1pri
 
 	monopoly.RegisterMonopolyServer(s, m)
 

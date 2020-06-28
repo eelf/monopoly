@@ -230,7 +230,64 @@ class View2 extends React.Component {
     }
 
     render() {
+        let a = 50;
+        let b = Math.ceil(a / 1.618);
+        let all = {
+            border: '1px solid #333',
+        };
+        let corner = Object.assign(all, {
+            display: 'block',
+            bakcgroundColor: 'royalblue',
+            width: a + 'px',
+            height: a + 'px',
+        });
+        let hor = Object.assign(all, {
+            width: b + 'px',
+            height: a + 'px',
+        });
+        let vert = Object.assign(all, {
+            height: b + 'px',
+        });
         return <div>
+            <table>
+                <tbody>
+                <tr>
+                    <td style={corner}>Free</td>
+                    <td style={hor}>M51</td>
+                    <td style={hor}>Ch2</td>
+                    <td style={hor}>M52</td>
+                    <td style={hor}>M53</td>
+                    <td style={hor}>Quadro3</td>
+                    <td style={hor}>M61</td>
+                    <td style={hor}>M62</td>
+                    <td style={hor}>Duo2</td>
+                    <td style={hor}>M63</td>
+                    <td style={corner}>GoJail</td>
+                </tr>
+                <tr><td style={vert}>M43</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>M71</td></tr>
+                <tr><td style={vert}>M42</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>M72</td></tr>
+                <tr><td style={vert}>Cc2</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>Cc3</td></tr>
+                <tr><td style={vert}>M41</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>M73</td></tr>
+                <tr><td style={vert}>Quadro2</td><td colSpan="9">&nbsp;</td> <td style={vert}>Quadro4</td></tr>
+                <tr><td style={vert}>M33</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>Ch3</td></tr>
+                <tr><td style={vert}>M32</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>M81</td></tr>
+                <tr><td style={vert}>Duo1</td>   <td colSpan="9">&nbsp;</td> <td style={vert}>LuxTax</td></tr>
+                <tr><td style={vert}>M31</td>    <td colSpan="9">&nbsp;</td> <td style={vert}>M82</td></tr>
+                <tr>
+                    <td style={corner}>Jail</td>
+                    <td style={hor}>M23</td>
+                    <td style={hor}>M22</td>
+                    <td style={hor}>Ch1</td>
+                    <td style={hor}>M21</td>
+                    <td style={hor}>Quadro1</td>
+                    <td style={hor}>IncTax</td>
+                    <td style={hor}>M12</td>
+                    <td style={hor}>Cc1</td>
+                    <td style={hor}>M11</td>
+                    <td style={corner}>Go</td>
+                </tr>
+                </tbody>
+            </table>
             <div style={{whiteSpace: 'pre-line', font: '12px "Andale Mono", Menlo, Monaco, monospace'}}>{this.state.text}</div>
             <input onKeyPress={e => {
                 if (e.charCode === 13) {

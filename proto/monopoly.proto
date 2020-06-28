@@ -58,7 +58,8 @@ message SubsRespStream {
         string name = 3;
     }
     repeated PlayerLoc locs = 1;
-    repeated string chat = 2;
+    uint32 turn = 2;
+    repeated string chat = 3;
     message Popup {
         enum Type {
             Unk = 0;
@@ -66,7 +67,7 @@ message SubsRespStream {
         }
         Type type = 1;
     }
-    Popup popup = 3;
+    Popup popup = 4;
 }
 
 message RollDiceRequest {
